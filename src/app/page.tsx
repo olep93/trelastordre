@@ -564,14 +564,36 @@ export default function Page() {
     });
   }
 
-  async function archiveSent(openMode: "outlook" | "mailto" | "none") {
+  function orderSubject() {
+    return `Lagerordre ${currentLagerOrderNumber()} - Bestilling uke ${order.week} ${STORE_NAME}`;
+  }
+
+  function openOutlookWeb() {
     if (!preview) return showToast("Ingen varer valgt");
+    const subject = orderSubject();
+    const url = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(RECIPIENT)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  function openEmailApp() {
+    if (!preview) return showToast("Ingen varer valgt");
+    const subject = orderSubject();
+    const mailto = `mailto:${RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
+    window.location.href = mailto;
+  }
+
+  async function archiveOrderAsSent() {
+    if (!preview) return showToast("Ingen varer valgt");
+
     if (order.trucks.some((truck) => !halfPalletStatus(truck).ok)) {
-      return showToast("Halvpall-regel må rettes før sending");
+      return showToast("Halvpall-regel må rettes før arkivering");
     }
 
+    const ok = confirm("Er bestillingen sendt til Wood og klar for arkivering?");
+    if (!ok) return;
+
     const lagerOrderNumber = currentLagerOrderNumber();
-    const subject = `Lagerordre ${lagerOrderNumber} - Bestilling uke ${order.week} ${STORE_NAME}`;
+    const subject = orderSubject();
 
     await addDoc(collection(db, "sentOrders"), {
       orderId: order.id,
@@ -591,19 +613,12 @@ export default function Page() {
       timestamp: Date.now(),
       userName,
       action: "send",
-      text: `sendte/arkiverte Lagerordre ${lagerOrderNumber} (${total.total} pk)`,
+      text: `arkiverte Lagerordre ${lagerOrderNumber} som bestilt (${total.total} pk)`,
     });
 
-    showToast(`Lagerordre ${lagerOrderNumber} arkivert som sendt`);
+    showToast(`Lagerordre ${lagerOrderNumber} er arkivert som bestilt`);
     resetActiveOrderAfterSent(lagerOrderNumber + 1);
-
-    if (openMode === "outlook") {
-      const url = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(RECIPIENT)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-    } else if (openMode === "mailto") {
-      const mailto = `mailto:${RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
-      window.location.href = mailto;
-    }
+    setView("archive");
   }
 
   async function copyOrder() {
@@ -898,13 +913,21 @@ export default function Page() {
 
           <textarea readOnly value={preview} placeholder="Bestillingen vises her når du velger varer." />
 
-          <div className="bottomActions quad">
-            <button className="primary" onClick={() => archiveSent("outlook")}>Åpne i Outlook Web + merk sendt</button>
-            <button className="secondary" onClick={() => archiveSent("mailto")}>E-postapp + merk sendt</button>
-            <button className="secondary" onClick={copyOrder}>Kopier</button>
-            <button className="secondary" onClick={() => archiveSent("none")}>Kun merk sendt</button>
+          <div className="bottomActions triple">
+            <button className="primary" onClick={openOutlookWeb}>Åpne Outlook Web</button>
+            <button className="secondary" onClick={openEmailApp}>Åpne e-postapp</button>
+            <button className="secondary" onClick={copyOrder}>Kopier bestilling</button>
           </div>
-          <p className="exportHint">Outlook Web åpner Outlook i nettleser. E-postapp bruker standard e-postapp på enheten.</p>
+
+          <div className="archiveConfirmBox">
+            <div>
+              <strong>Etter at bestillingen er sendt til Wood</strong>
+              <span>Arkiverer lagerordren, legger den i historikk/statistikk og starter ny tom lagerordre.</span>
+            </div>
+            <button className="successButton" onClick={archiveOrderAsSent}>Arkiver ordre som bestilt</button>
+          </div>
+
+          <p className="exportHint">Outlook Web åpner Outlook i nettleser. «Åpne e-postapp» bruker standard e-postapp på enheten, og kan derfor åpne Gmail/iOS Mail hvis det er standardvalget.</p>
         </section>
 
         <section className="activityPanel">

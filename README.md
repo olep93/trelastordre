@@ -73,3 +73,39 @@ Framework preset: Next.js.
 - Logg beholdes for viktige hendelser: ny bil, nullstilling og sendt/arkivert ordre.
 - Aktivitetspanelet laster færre logglinjer.
 - Dette reduserer Firebase-trafikk og gjør appen raskere på mobil.
+
+
+## Enterprise 4.5
+
+- Alt fra 4.4 er inkludert.
+- Skiller e-post og arkivering:
+  - Åpne Outlook Web åpner bare e-postutkast.
+  - Åpne e-postapp åpner bare standard mailapp.
+  - Kopier bestilling kopierer bare teksten.
+  - Arkiver ordre som bestilt er egen bekreftet handling.
+- Arkivering viser bekreftelse, lagrer i arkiv/statistikk og starter ny tom lagerordre.
+
+
+## Enterprise 5.0
+
+- Alt fra 4.5 er inkludert.
+- Betydelig grafisk redesign:
+  - Ny Obs Bygg-inspirert topp/hero.
+  - Mer premium kortdesign.
+  - Sterkere blå/oransje profil.
+  - Mer moderne bilkort, produktkort og bunnpanel.
+  - Bedre sticky navigasjon.
+  - Mer app-lignende mobilopplevelse.
+- Ingen funksjonalitet fra 4.5 er fjernet.
+
+
+## Enterprise 5.1
+
+- Alt fra 5.0 er inkludert.
+- Visuell lastebil/modulindikator på hvert bilkort.
+- Prosentvis pakkeindikator som fylles grafisk.
+- Favoritter/ofte brukte varer lagres lokalt på enheten.
+- Favorittstripe øverst i produktområdet.
+- Stjerneknapp på produktkort og i produktpanelet.
+- Statistikk viser "Mest bestilt" basert på arkiverte ordre.
+- Mer visuelle mikroanimasjoner ved full modul og arkiv.
