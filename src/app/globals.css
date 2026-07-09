@@ -1222,3 +1222,41 @@ textarea{
 .sheetQty b:active{
   transform:scale(1.08);
 }
+
+
+/* Enterprise 5.3 fast tap + cleaner mobile navigation */
+@media(max-width:720px){
+  .appTabs{
+    position:relative!important;
+    top:auto!important;
+    z-index:1!important;
+    grid-template-columns:repeat(3,1fr);
+  }
+  .toolBar{
+    position:relative!important;
+    top:auto!important;
+    z-index:1!important;
+  }
+  .stickyCategoryHeader{
+    position:relative!important;
+    top:auto!important;
+    z-index:1!important;
+  }
+  .mobileDock{
+    grid-template-columns:repeat(4,1fr)!important;
+  }
+  .mobileDock button{
+    font-size:12px;
+    padding:10px 4px;
+  }
+}
+
+/* Faster perceived touch response */
+.sheetQty button{
+  user-select:none;
+  -webkit-user-select:none;
+}
+.sheetQty button:active{
+  transform:none;
+  filter:brightness(.95);
+}

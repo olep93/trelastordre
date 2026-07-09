@@ -118,3 +118,15 @@ Framework preset: Next.js.
 - Firebase lagrer fortsatt i bakgrunnen og synker med andre enheter.
 - Dette fjerner følelsen av at appen ligger ett trykk bak på mobil.
 - Knapper har `touch-action: manipulation` for raskere mobilrespons.
+
+
+## Enterprise 5.3 FastTap
+
+- Alt fra 5.2/5.1/5.0/4.5 er inkludert.
+- Kraftig ytelsesfiks for raske trykk:
+  - UI oppdateres umiddelbart.
+  - Flere raske `+ / −` samles og sendes som én Firestore-transaksjon etter ca. 350 ms.
+  - Dette hindrer transaksjonskø og følelsen av at appen ligger mange trykk bak.
+- Mobil har nå kun bunnmeny.
+- Bunnmeny har fire knapper: Ordre, Arkiv, Statistikk og E-post.
+- Sticky menyer øverst på mobil er slått av for å gi roligere grensesnitt.
