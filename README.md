@@ -109,3 +109,12 @@ Framework preset: Next.js.
 - Stjerneknapp på produktkort og i produktpanelet.
 - Statistikk viser "Mest bestilt" basert på arkiverte ordre.
 - Mer visuelle mikroanimasjoner ved full modul og arkiv.
+
+
+## Enterprise 5.2 Speed
+
+- Alt fra 5.1 er inkludert.
+- Ytelsesfiks: pluss/minus oppdaterer tallet umiddelbart lokalt.
+- Firebase lagrer fortsatt i bakgrunnen og synker med andre enheter.
+- Dette fjerner følelsen av at appen ligger ett trykk bak på mobil.
+- Knapper har `touch-action: manipulation` for raskere mobilrespons.

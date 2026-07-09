@@ -1200,3 +1200,25 @@ textarea{
     grid-template-columns:1fr;
   }
 }
+
+
+/* Enterprise 5.2 speed fixes */
+.sheetQty button,
+.productRow,
+.favoriteChip,
+.visualTruckCard,
+.mobileDock button{
+  touch-action:manipulation;
+}
+.qtyFastHint{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:850;
+}
+.sheetQty b{
+  transition:transform .08s ease;
+}
+.sheetQty button:active + b,
+.sheetQty b:active{
+  transform:scale(1.08);
+}

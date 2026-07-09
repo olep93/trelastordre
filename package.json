@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-51",
-  "version": "5.1.0",
+  "name": "trelastordre-enterprise-52-speed",
+  "version": "5.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
