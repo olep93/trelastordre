@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addDoc,
   collection,
@@ -343,6 +343,7 @@ export default function Page() {
   const [order, setOrder] = useState<WeeklyOrder>(freshOrder());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pendingSync, setPendingSync] = useState(false);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
@@ -354,6 +355,8 @@ export default function Page() {
   const [categoryOpen, setCategoryOpen] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<SelectedProduct | null>(null);
   const [toast, setToast] = useState("");
+  const pendingQtyRef = useRef<Record<string, { category: string; product: string; length: string; delta: number; truckIndex: number }>>({});
+  const flushTimerRef = useRef<number | null>(null);
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
   const [view, setView] = useState<"order" | "archive" | "stats">("order");
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -383,7 +386,17 @@ export default function Page() {
       await ensureOrder();
 
       unsubOrder = onSnapshot(orderRef(), (snap) => {
-        if (snap.exists()) setOrder(snap.data() as WeeklyOrder);
+        if (snap.exists()) {
+          const remote = snap.data() as WeeklyOrder;
+          const pending = Object.values(pendingQtyRef.current || {}).filter((change) => change.delta !== 0);
+
+          if (!pending.length) {
+            setOrder(remote);
+          } else {
+            // Keep local unflushed taps visible even when Firestore sends an older snapshot back.
+            setOrder(applyPendingChanges(remote, pending));
+          }
+        }
         setLoading(false);
       });
 
@@ -392,10 +405,7 @@ export default function Page() {
         (snap) => setSentOrders(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<SentOrder, "id">) }))),
       );
 
-      unsubLogs = onSnapshot(
-        query(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), orderBy("timestamp", "desc"), limit(12)),
-        (snap) => setLogs(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<LogEntry, "id">) }))),
-      );
+      // StableSync: live activity log disabled for speed.
 
       unsubPresence = onSnapshot(
         query(collection(db, "presence"), orderBy("lastSeen", "desc"), limit(20)),
@@ -443,6 +453,36 @@ export default function Page() {
     if (userId) setDoc(doc(db, "presence", userId), { id: userId, name: clean, lastSeen: Date.now() }, { merge: true });
   }
 
+
+  function applyPendingChanges(baseOrder: WeeklyOrder, changes: Array<{ category: string; product: string; length: string; delta: number; truckIndex: number }>) {
+    let trucks = [...baseOrder.trucks];
+
+    changes.forEach((change) => {
+      const index = Math.min(change.truckIndex, Math.max(0, trucks.length - 1));
+
+      trucks = trucks.map((truck, truckIndex) => {
+        if (truckIndex !== index) return truck;
+
+        const items = { ...truck.items };
+        const key = lineKey(change.category, change.product, change.length);
+        const next = Math.max(0, (items[key] || 0) + change.delta);
+
+        if (next <= 0) delete items[key];
+        else items[key] = next;
+
+        return { ...truck, items };
+      });
+    });
+
+    return {
+      ...baseOrder,
+      trucks,
+      lastEditedBy: userName,
+      lastEditedAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+  }
+
   async function updateOrder(
     updater: (current: WeeklyOrder) => {
       next: WeeklyOrder;
@@ -461,16 +501,7 @@ export default function Page() {
 
         transaction.set(ref, { ...result.next, updatedAt: now, lastEditedBy: userName, lastEditedAt: now }, { merge: true });
 
-        if (result.logText) {
-          const logRef = doc(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"));
-          transaction.set(logRef, {
-            orderId: orderIdForCurrentWeek(),
-            timestamp: now,
-            userName,
-            action: result.action || "edit",
-            text: result.logText,
-          });
-        }
+        // Logging disabled in StableSync for better mobile performance.
       });
     } finally {
       setSaving(false);
@@ -737,7 +768,7 @@ export default function Page() {
           <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
           <div className="headerText">
             <h1>Trelastordre</h1>
-            <p>Uke {order.week} · {saving ? "Lagrer..." : "Live i Firebase"}</p>
+            <p>Uke {order.week} · {pendingSync ? "Venter på autosync..." : saving ? "Synker..." : "Synket"}</p>
           </div>
           <button className="iconButton dangerSoft" onClick={resetOrder}>Nullstill</button>
         </div>
@@ -747,7 +778,7 @@ export default function Page() {
         <section className="presenceBar">
           <div>
             <strong>Hei, {userName} 👋</strong>
-            <span>Felles liveordre · sist endret av {order.lastEditedBy || "ingen ennå"}</span>
+            <span>Lokal hurtigmodus · autosync hvert ca. 8 sek · sist endret av {order.lastEditedBy || "ingen ennå"}</span>
           </div>
           <div className="presenceUsers">
             {presence.slice(0, 6).map((user) => {
@@ -932,8 +963,8 @@ export default function Page() {
 
         <section className="activityPanel">
           <div className="activityHeader">
-            <h2>Siste aktivitet</h2>
-            <p>{logs.length ? "Viktige hendelser. Pakketelling loggføres ikke for ytelse." : "Ingen aktivitet ennå"}</p>
+            <h2>Aktivitet</h2>
+            <p>Logg er deaktivert i StableSync for raskere mobilbruk.</p>
           </div>
           <div className="activityList">
             {logs.slice(0, 6).map((log) => (
@@ -1025,6 +1056,7 @@ export default function Page() {
         <button onClick={() => setView("order")}>Ordre</button>
         <button onClick={() => setView("archive")}>Arkiv</button>
         <button onClick={() => setView("stats")}>Statistikk</button>
+        <button onClick={() => { setView("order"); setTimeout(() => document.getElementById("export")?.scrollIntoView({ behavior: "smooth" }), 80); }}>E-post</button>
       </nav>
 
       {selected && (

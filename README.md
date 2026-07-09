@@ -130,3 +130,15 @@ Framework preset: Next.js.
 - Mobil har nå kun bunnmeny.
 - Bunnmeny har fire knapper: Ordre, Arkiv, Statistikk og E-post.
 - Sticky menyer øverst på mobil er slått av for å gi roligere grensesnitt.
+
+
+## Enterprise 5.4 StableSync
+
+- Alt fra 5.3/5.2/5.1/5.0/4.5 er inkludert.
+- Ny synkemodell for bedre mobilhastighet:
+  - Trykk oppdaterer UI umiddelbart.
+  - Firebase får samlet oppdatering etter ca. 8 sekunder.
+  - Lokale usynkede trykk beholdes visuelt selv om et eldre Firebase-snapshot kommer tilbake.
+- Live-logg er deaktivert for bedre hastighet.
+- Bunnmenyen er ryddet til fire knapper: Ordre, Arkiv, Statistikk og E-post.
+- Sticky menyer øverst på mobil er slått av.
