@@ -59,6 +59,7 @@ type SentOrder = {
   body: string;
   totalPackages: number;
   totalLines: number;
+  lagerOrderNumber?: number;
 };
 
 type LogEntry = {
@@ -226,7 +227,11 @@ function progress(target: { gran: number; imp: number }, gran: number, imp: numb
   const overGran = Math.max(0, gran - target.gran);
   const overImp = Math.max(0, imp - target.imp);
   const hit = missingGran === 0 && missingImp === 0 && overGran === 0 && overImp === 0;
-  let text = hit ? "Klar" : overGran || overImp ? `+${overGran}G/+${overImp}I` : `Mangler ${missingGran}G/${missingImp}I`;
+  let text = hit
+    ? "Klar"
+    : overGran || overImp
+      ? `Over med ${overGran} gran / ${overImp} impregnert`
+      : `Mangler ${missingGran} gran / ${missingImp} impregnert`;
   return { hit, text, missingGran, missingImp, overGran, overImp };
 }
 
@@ -350,6 +355,7 @@ export default function Page() {
   const [selected, setSelected] = useState<SelectedProduct | null>(null);
   const [toast, setToast] = useState("");
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
+  const [view, setView] = useState<"order" | "archive" | "stats">("order");
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [presence, setPresence] = useState<PresenceUser[]>([]);
@@ -387,7 +393,7 @@ export default function Page() {
       );
 
       unsubLogs = onSnapshot(
-        query(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), orderBy("timestamp", "desc"), limit(40)),
+        query(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), orderBy("timestamp", "desc"), limit(12)),
         (snap) => setLogs(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<LogEntry, "id">) }))),
       );
 
@@ -500,7 +506,37 @@ export default function Page() {
     setActiveTruckIndex(0);
   }
 
+  function resetActiveOrderAfterSent(nextLagerOrderNumber: number) {
+    updateOrder((current) => ({
+      next: {
+        ...current,
+        trucks: [{ id: randomId(), name: "Bil 1", items: {} }],
+      },
+      action: "startNewLagerOrder",
+      logText: `startet Lagerordre ${nextLagerOrderNumber}`,
+    }));
+    setActiveTruckIndex(0);
+  }
+
   function changeQty(category: string, product: string, length: string, delta: number) {
+    if (delta > 0 && activeStatus?.ok) {
+      const proceed = confirm(`${activeTruck.name} er allerede modulvogn-klar. Vil du opprette ny bil og legge varen der i stedet?`);
+      if (!proceed) return;
+
+      updateOrder((current) => {
+        const newTruckIndex = current.trucks.length;
+        const newTruck: Truck = { id: randomId(), name: `Bil ${newTruckIndex + 1}`, items: { [lineKey(category, product, length)]: 1 } };
+        setActiveTruckIndex(newTruckIndex);
+
+        return {
+          next: { ...current, trucks: [...current.trucks, newTruck] },
+          action: "addTruck",
+          logText: `opprettet ${newTruck.name} og la til 1 pk ${product} ${length === "Fallende" ? "Fallende lengder" : `${length} m`}`,
+        };
+      });
+      return;
+    }
+
     updateOrder((current) => {
       const index = Math.min(activeTruckIndex, Math.max(0, current.trucks.length - 1));
       let resultQty = 0;
@@ -524,19 +560,18 @@ export default function Page() {
 
       return {
         next: { ...current, trucks },
-        action: delta > 0 ? "increment" : "decrement",
-        logText: `${delta > 0 ? "la til" : "trakk fra"} ${Math.abs(delta)} pk ${product} ${lengthText} på ${truckName} (${resultQty} pk totalt)`,
       };
     });
   }
 
-  async function archiveSent(openMode: "outlook" | "mailto") {
+  async function archiveSent(openMode: "outlook" | "mailto" | "none") {
     if (!preview) return showToast("Ingen varer valgt");
     if (order.trucks.some((truck) => !halfPalletStatus(truck).ok)) {
       return showToast("Halvpall-regel må rettes før sending");
     }
 
-    const subject = `Bestilling ${order.week} ${STORE_NAME}`;
+    const lagerOrderNumber = currentLagerOrderNumber();
+    const subject = `Lagerordre ${lagerOrderNumber} - Bestilling uke ${order.week} ${STORE_NAME}`;
 
     await addDoc(collection(db, "sentOrders"), {
       orderId: order.id,
@@ -548,6 +583,7 @@ export default function Page() {
       body: preview,
       totalPackages: total.total,
       totalLines: total.lines,
+      lagerOrderNumber,
     } satisfies Omit<SentOrder, "id">);
 
     await addDoc(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), {
@@ -555,15 +591,16 @@ export default function Page() {
       timestamp: Date.now(),
       userName,
       action: "send",
-      text: `sendte/arkiverte bestilling (${total.total} pk)`,
+      text: `sendte/arkiverte Lagerordre ${lagerOrderNumber} (${total.total} pk)`,
     });
 
-    showToast("Bestilling arkivert som sendt");
+    showToast(`Lagerordre ${lagerOrderNumber} arkivert som sendt`);
+    resetActiveOrderAfterSent(lagerOrderNumber + 1);
 
     if (openMode === "outlook") {
       const url = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(RECIPIENT)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
       window.open(url, "_blank", "noopener,noreferrer");
-    } else {
+    } else if (openMode === "mailto") {
       const mailto = `mailto:${RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(preview)}`;
       window.location.href = mailto;
     }
@@ -573,6 +610,79 @@ export default function Page() {
     if (!preview) return showToast("Ingen varer valgt");
     await navigator.clipboard.writeText(preview);
     showToast("Bestilling kopiert");
+  }
+
+
+  function exportSentOrderCsv(sent: SentOrder) {
+    const rows = [
+      ["Emne", sent.subject],
+      ["Sendt", formatTime(sent.sentAt)],
+      ["Sendt av", sent.sentBy],
+      ["Pakker", String(sent.totalPackages)],
+      ["Linjer", String(sent.totalLines)],
+      [],
+      ["Bestilling"],
+      ...sent.body.split("\n").map((line) => [line]),
+    ];
+
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(";"))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${sent.subject.replace(/[^\wæøåÆØÅ-]+/g, "_")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportAllArchiveCsv() {
+    const rows = [
+      ["Sendt", "Sendt av", "Emne", "Pakker", "Linjer", "Bestilling"],
+      ...sentOrders.map((sent) => [
+        formatTime(sent.sentAt),
+        sent.sentBy,
+        sent.subject,
+        String(sent.totalPackages),
+        String(sent.totalLines),
+        sent.body.replace(/\n/g, " | "),
+      ]),
+    ];
+
+    const csv = rows
+      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(";"))
+      .join("\n");
+
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Sendte_bestillinger_trelastordre.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function archiveStats() {
+    const totalSent = sentOrders.length;
+    const totalPackages = sentOrders.reduce((sum, order) => sum + order.totalPackages, 0);
+    const totalLines = sentOrders.reduce((sum, order) => sum + order.totalLines, 0);
+    const avgPackages = totalSent ? Math.round(totalPackages / totalSent) : 0;
+    return { totalSent, totalPackages, totalLines, avgPackages };
+  }
+
+  function currentWeekSentOrders() {
+    return sentOrders.filter((sent) => sent.week === order.week && sent.year === order.year);
+  }
+
+  function currentLagerOrderNumber() {
+    const numbers = currentWeekSentOrders()
+      .map((sent) => sent.lagerOrderNumber || 0)
+      .filter(Boolean);
+
+    if (!numbers.length) return currentWeekSentOrders().length + 1;
+    return Math.max(...numbers) + 1;
   }
 
   function productQty(category: Category, product: string) {
@@ -633,12 +743,20 @@ export default function Page() {
           </div>
         </section>
 
+        <nav className="appTabs">
+          <button className={view === "order" ? "active" : ""} onClick={() => setView("order")}>Aktiv ordre</button>
+          <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}>Sendte bestillinger</button>
+          <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}>Statistikk</button>
+        </nav>
+
+        {view === "order" && (
+          <>
         <section className="dashboard">
           <div className="dashboardHeader">
             <div>
               <span className="eyebrow">Aktiv liveordre</span>
-              <h2>Uke {order.week}</h2>
-              <p>{STORE_NAME} · {total.total} pakker · {total.lines} linjer</p>
+              <h2>Lagerordre {currentLagerOrderNumber()}</h2>
+              <p>Uke {order.week} · {STORE_NAME} · {total.total} pakker · {total.lines} linjer</p>
             </div>
             <button className="primary" onClick={addTruck}>+ Ny bil</button>
           </div>
@@ -780,10 +898,11 @@ export default function Page() {
 
           <textarea readOnly value={preview} placeholder="Bestillingen vises her når du velger varer." />
 
-          <div className="bottomActions triple">
-            <button className="primary" onClick={() => archiveSent("outlook")}>Åpne i Outlook Web</button>
-            <button className="secondary" onClick={() => archiveSent("mailto")}>E-postapp</button>
+          <div className="bottomActions quad">
+            <button className="primary" onClick={() => archiveSent("outlook")}>Åpne i Outlook Web + merk sendt</button>
+            <button className="secondary" onClick={() => archiveSent("mailto")}>E-postapp + merk sendt</button>
             <button className="secondary" onClick={copyOrder}>Kopier</button>
+            <button className="secondary" onClick={() => archiveSent("none")}>Kun merk sendt</button>
           </div>
           <p className="exportHint">Outlook Web åpner Outlook i nettleser. E-postapp bruker standard e-postapp på enheten.</p>
         </section>
@@ -791,10 +910,10 @@ export default function Page() {
         <section className="activityPanel">
           <div className="activityHeader">
             <h2>Siste aktivitet</h2>
-            <p>{logs.length ? "Live endringslogg" : "Ingen aktivitet ennå"}</p>
+            <p>{logs.length ? "Viktige hendelser. Pakketelling loggføres ikke for ytelse." : "Ingen aktivitet ennå"}</p>
           </div>
           <div className="activityList">
-            {logs.slice(0, 10).map((log) => (
+            {logs.slice(0, 6).map((log) => (
               <div className="activityItem" key={log.id}>
                 <div className="activityDot" />
                 <div>
@@ -807,7 +926,11 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="archivePanel" id="archive">
+          </>
+        )}
+
+        {view === "archive" && (
+        <section className="archivePanel openArchive" id="archive">
           <button className="archiveHeader" onClick={() => setArchiveOpen((v) => !v)}>
             <div>
               <h2>Sendte bestillinger</h2>
@@ -823,16 +946,48 @@ export default function Page() {
                 <details className="archiveItem" key={sent.id}>
                   <summary>
                     <div>
-                      <strong>{sent.subject}</strong>
+                      <strong>Lagerordre {sent.lagerOrderNumber || "?"} · {sent.subject}</strong>
                       <span>{formatTime(sent.sentAt)} · sendt av {sent.sentBy} · {sent.totalPackages} pk · {sent.totalLines} linjer</span>
                     </div>
                   </summary>
                   <textarea readOnly value={sent.body} />
+                  <div className="archiveActions">
+                    <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
+                  </div>
                 </details>
               ))}
             </div>
           )}
         </section>
+        )}
+
+        {view === "stats" && (
+          <section className="statsPanel">
+            <div className="statsHeader">
+              <h2>Statistikk</h2>
+              <p>Basert på sendte bestillinger i arkivet.</p>
+            </div>
+            <div className="statsGrid">
+              <article>
+                <span>Sendte bestillinger</span>
+                <strong>{archiveStats().totalSent}</strong>
+              </article>
+              <article>
+                <span>Pakker totalt</span>
+                <strong>{archiveStats().totalPackages}</strong>
+              </article>
+              <article>
+                <span>Varelinjer totalt</span>
+                <strong>{archiveStats().totalLines}</strong>
+              </article>
+              <article>
+                <span>Snitt pakker per ordre</span>
+                <strong>{archiveStats().avgPackages}</strong>
+              </article>
+            </div>
+            <button className="primary" onClick={exportAllArchiveCsv} disabled={!sentOrders.length}>Eksporter all historikk til Excel/CSV</button>
+          </section>
+        )}
       </main>
 
       <aside className="stickyStatus">
@@ -844,9 +999,9 @@ export default function Page() {
       </aside>
 
       <nav className="mobileDock">
-        <button onClick={() => document.querySelector(".products")?.scrollIntoView({ behavior: "smooth" })}>Varer</button>
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Teller</button>
-        <button onClick={() => document.getElementById("export")?.scrollIntoView({ behavior: "smooth" })}>E-post</button>
+        <button onClick={() => setView("order")}>Ordre</button>
+        <button onClick={() => setView("archive")}>Arkiv</button>
+        <button onClick={() => setView("stats")}>Statistikk</button>
       </nav>
 
       {selected && (

@@ -40,3 +40,36 @@ Gå til Firebase → Firestore Database → Rules og lim inn innholdet fra `fire
 4. Vercel deployer automatisk.
 
 Framework preset: Next.js.
+
+
+## 2.1 fix
+- Reintroduced `MODULE_TARGETS` export for compatibility with older files that may still be present in the GitHub repo.
+
+
+## Enterprise 2.2
+
+- Egen fane for aktiv ordre, sendte bestillinger og statistikk.
+- CSV/Excel-eksport av enkeltbestilling.
+- CSV/Excel-eksport av hele arkivet.
+- Stopper videre påfyll på bil som allerede er modulvogn-klar og spør om varen skal legges på ny bil.
+- Forklaring: E-postapp-knappen bruker enhetens standard mailto-håndtering. Outlook kan ikke tvinges via mailto, derfor er Outlook Web hovedknappen.
+
+
+## Enterprise 2.3
+
+- Alt fra 2.2 er inkludert.
+- Modultekst bruker fulle ord i stedet for `G/I`.
+- Aktiv ordre merkes som Lagerordre 1, Lagerordre 2 osv.
+- Lagerordrenummer resettes naturlig per uke og øker når ordre arkiveres/sendes.
+- Etter sendt/arkivert ordre starter appen en ny tom lagerordre.
+- Egen knapp for "Kun merk sendt".
+
+
+## Enterprise 4.4
+
+- Alt fra 2.3 er inkludert.
+- Ytelsesfiks: `+` og `−` skriver ikke lenger logglinje for hvert trykk.
+- Ordren oppdateres fortsatt live og felles i Firebase.
+- Logg beholdes for viktige hendelser: ny bil, nullstilling og sendt/arkivert ordre.
+- Aktivitetspanelet laster færre logglinjer.
+- Dette reduserer Firebase-trafikk og gjør appen raskere på mobil.

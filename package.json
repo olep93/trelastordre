@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise",
-  "version": "2.0.0",
+  "name": "trelastordre-enterprise-44",
+  "version": "4.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
