@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    match /sentOrders/{sentOrderId} {
+      allow read, write: if true;
+    }
+
+    match /changeLogs/{orderId}/entries/{entryId} {
+      allow read, write: if true;
+    }
+
+    match /presence/{userId} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
