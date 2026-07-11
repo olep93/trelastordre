@@ -1299,3 +1299,78 @@ textarea{
   filter:brightness(.94);
   transform:none;
 }
+
+
+/* Enterprise 5.5 performance */
+.visualTruckCard.complete{
+  animation:none!important;
+}
+
+.visualTruckCard,
+.productRow,
+.favoriteChip{
+  transition:none!important;
+}
+
+.visualTruckCard:hover,
+.productRow:hover{
+  transform:none!important;
+}
+
+.brandHero,
+.presenceBar,
+.appTabs,
+.heroPanel,
+.exportPanel,
+.activityPanel,
+.archivePanel,
+.statsPanel,
+.category,
+.productSheet,
+.stickyStatus{
+  backdrop-filter:none!important;
+}
+
+.truckLoadFill,
+.progressFill{
+  transition:width .08s linear!important;
+}
+
+.sheetQty button,
+.productRow,
+.favoriteChip,
+.visualTruckCard,
+.mobileDock button{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.sheetQty button{
+  will-change:auto;
+}
+
+@media(max-width:720px){
+  .brandHero:after{
+    display:none;
+  }
+}
+
+/* Enterprise 6.0 isolated fast length selector */
+.fastProductSheet{
+  contain:layout paint style;
+}
+.fastSheetQty button{
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.fastSheetQty button:active{
+  transform:none!important;
+  filter:brightness(.93);
+}
+.sheetOpenHidden{
+  display:none!important;
+}
+.fastProductSheet .sheetLengthRow{
+  contain:layout paint;
+}

@@ -142,3 +142,30 @@ Framework preset: Next.js.
 - Live-logg er deaktivert for bedre hastighet.
 - Bunnmenyen er ryddet til fire knapper: Ordre, Arkiv, Statistikk og E-post.
 - Sticky menyer øverst på mobil er slått av.
+
+
+## Enterprise 5.5 Performance
+
+- Alt fra 5.4 StableSync er inkludert.
+- Memoization av tunge beregninger:
+  - aktive produktantall
+  - aktiv bilstatus
+  - totaler
+  - statistikk
+  - mest bestilt
+- E-postpreview bygges kun når ordrevisningen er aktiv.
+- Reduserer dyre CSS-effekter på mobil:
+  - ingen kontinuerlig pulsering
+  - mindre blur/backdrop-filter
+  - færre hover/transition-effekter
+- Beholder StableSync med lokal umiddelbar respons og autosync.
+
+
+## Enterprise 6.0 Refactor
+
+- Alt fra 5.5 er med.
+- Lengdepanelet er skilt ut i egen memoized React-komponent.
+- Hvert +/−-trykk oppdaterer bare lokalt tall i panelet, ikke hele appen.
+- Raske trykk samles og committes som én deltaoppdatering etter 1,2 sekunder eller når panelet lukkes.
+- Firebase-transaksjon skjer per trykkserie, ikke per trykk.
+- Bunnmeny og sticky status skjules mens produktpanelet er åpent for mindre rendering.

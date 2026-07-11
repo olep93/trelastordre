@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { categories, lengthsFor, buildMailName, type Category, type Material } from "@/data/products";
 import { db } from "@/firebase/config";
+import { FastProductSheet } from "@/components/FastProductSheet";
 
 const RECIPIENT = "post@wood.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
@@ -433,12 +434,52 @@ export default function Page() {
   }, [userId, userName]);
 
   const activeTruck = order.trucks[Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1))] || order.trucks[0];
-  const activeCount = activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, lines: 0 };
-  const activeStatus = activeTruck ? moduleStatus(activeTruck) : null;
-  const total = countAll(order);
-  const preview = orderText(order);
-  const halfInvalid = activeTruck ? !halfPalletStatus(activeTruck).ok : false;
-  const halfCount = activeTruck ? halfPalletCount(activeTruck) : 0;
+
+  const activeCount = useMemo(
+    () => activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, lines: 0 },
+    [activeTruck],
+  );
+
+  const activeStatus = useMemo(
+    () => activeTruck ? moduleStatus(activeTruck) : null,
+    [activeTruck],
+  );
+
+  const total = useMemo(() => countAll(order), [order.trucks]);
+
+  const preview = useMemo(() => {
+    if (view !== "order") return "";
+    return orderText(order);
+  }, [order, view]);
+
+  const halfInvalid = useMemo(() => activeTruck ? !halfPalletStatus(activeTruck).ok : false, [activeTruck]);
+  const halfCount = useMemo(() => activeTruck ? halfPalletCount(activeTruck) : 0, [activeTruck]);
+
+  const activeProductTotals = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!activeTruck) return map;
+
+    Object.entries(activeTruck.items).forEach(([key, qty]) => {
+      const parsed = parseLineKey(key);
+      const productMapKey = `${parsed.category}__${parsed.displayName}`;
+      map.set(productMapKey, (map.get(productMapKey) || 0) + qty);
+    });
+
+    return map;
+  }, [activeTruck]);
+
+  const selectedLengths = useMemo(
+    () => selected ? lengthsFor(selected.category, selected.product) : [],
+    [selected],
+  );
+
+  const selectedProductQty = useMemo(
+    () => selected ? (activeProductTotals.get(`${selected.category.name}__${selected.product}`) || 0) : 0,
+    [selected, activeProductTotals],
+  );
+
+  const archiveSummary = useMemo(() => archiveStats(), [sentOrders]);
+  const topProducts = useMemo(() => mostOrderedFromArchive(sentOrders), [sentOrders]);
 
   function showToast(message: string) {
     setToast(message);
@@ -549,49 +590,45 @@ export default function Page() {
     setActiveTruckIndex(0);
   }
 
-  function changeQty(category: string, product: string, length: string, delta: number) {
-    if (delta > 0 && activeStatus?.ok) {
-      const proceed = confirm(`${activeTruck.name} er allerede modulvogn-klar. Vil du opprette ny bil og legge varen der i stedet?`);
-      if (!proceed) return;
+  async function commitProductDeltas(category: string, product: string, deltas: Record<string, number>) {
+    const index = Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1));
 
-      updateOrder((current) => {
-        const newTruckIndex = current.trucks.length;
-        const newTruck: Truck = { id: randomId(), name: `Bil ${newTruckIndex + 1}`, items: { [lineKey(category, product, length)]: 1 } };
-        setActiveTruckIndex(newTruckIndex);
-
-        return {
-          next: { ...current, trucks: [...current.trucks, newTruck] },
-          action: "addTruck",
-          logText: `opprettet ${newTruck.name} og la til 1 pk ${product} ${length === "Fallende" ? "Fallende lengder" : `${length} m`}`,
-        };
-      });
-      return;
-    }
-
-    updateOrder((current) => {
-      const index = Math.min(activeTruckIndex, Math.max(0, current.trucks.length - 1));
-      let resultQty = 0;
-      const truckName = current.trucks[index]?.name || `Bil ${index + 1}`;
-
+    // Update the main screen once for the whole tapping burst.
+    setOrder((current) => {
       const trucks = current.trucks.map((truck, truckIndex) => {
         if (truckIndex !== index) return truck;
-
         const items = { ...truck.items };
-        const key = lineKey(category, product, length);
-        const next = Math.max(0, (items[key] || 0) + delta);
-        resultQty = next;
 
-        if (next <= 0) delete items[key];
-        else items[key] = next;
+        Object.entries(deltas).forEach(([length, delta]) => {
+          const key = lineKey(category, product, length);
+          const next = Math.max(0, (items[key] || 0) + delta);
+          if (next <= 0) delete items[key];
+          else items[key] = next;
+        });
 
         return { ...truck, items };
       });
 
-      const lengthText = length === "Fallende" ? "Fallende lengder" : `${length} m`;
+      return { ...current, trucks, updatedAt: Date.now(), lastEditedBy: userName, lastEditedAt: Date.now() };
+    });
 
-      return {
-        next: { ...current, trucks },
-      };
+    await updateOrder((current) => {
+      const remoteIndex = Math.min(index, Math.max(0, current.trucks.length - 1));
+      const trucks = current.trucks.map((truck, truckIndex) => {
+        if (truckIndex !== remoteIndex) return truck;
+        const items = { ...truck.items };
+
+        Object.entries(deltas).forEach(([length, delta]) => {
+          const key = lineKey(category, product, length);
+          const next = Math.max(0, (items[key] || 0) + delta);
+          if (next <= 0) delete items[key];
+          else items[key] = next;
+        });
+
+        return { ...truck, items };
+      });
+
+      return { next: { ...current, trucks } };
     });
   }
 
@@ -732,8 +769,7 @@ export default function Page() {
   }
 
   function productQty(category: Category, product: string) {
-    if (!activeTruck) return 0;
-    return lengthsFor(category, product).reduce((sum, length) => sum + (activeTruck.items[lineKey(category.name, product, length)] || 0), 0);
+    return activeProductTotals.get(`${category.name}__${product}`) || 0;
   }
 
   if (userReady && !userName) {
@@ -811,6 +847,7 @@ export default function Page() {
             {order.trucks.map((truck, index) => {
               const count = countForTruck(truck);
               const status = moduleStatus(truck);
+              const fillPercent = truckFillPercent(truck);
               return (
                 <button key={truck.id} className={`visualTruckCard ${index === activeTruckIndex ? "active" : ""} ${status.ok ? "complete" : ""} ${!status.half.ok ? "invalid" : ""}`} onClick={() => setActiveTruckIndex(index)}>
                   <div className="truckCardTop">
@@ -1024,19 +1061,19 @@ export default function Page() {
             <div className="statsGrid">
               <article>
                 <span>Sendte bestillinger</span>
-                <strong>{archiveStats().totalSent}</strong>
+                <strong>{archiveSummary.totalSent}</strong>
               </article>
               <article>
                 <span>Pakker totalt</span>
-                <strong>{archiveStats().totalPackages}</strong>
+                <strong>{archiveSummary.totalPackages}</strong>
               </article>
               <article>
                 <span>Varelinjer totalt</span>
-                <strong>{archiveStats().totalLines}</strong>
+                <strong>{archiveSummary.totalLines}</strong>
               </article>
               <article>
                 <span>Snitt pakker per ordre</span>
-                <strong>{archiveStats().avgPackages}</strong>
+                <strong>{archiveSummary.avgPackages}</strong>
               </article>
             </div>
             <button className="primary" onClick={exportAllArchiveCsv} disabled={!sentOrders.length}>Eksporter all historikk til Excel/CSV</button>
@@ -1044,7 +1081,7 @@ export default function Page() {
         )}
       </main>
 
-      <aside className="stickyStatus">
+      <aside className={`stickyStatus ${selected ? "sheetOpenHidden" : ""}`}>
         <div>
           <strong>{activeTruck.name}</strong>
           <span>{activeCount.gran} gran / {activeCount.imp} imp / {activeCount.total} pk</span>
@@ -1052,7 +1089,7 @@ export default function Page() {
         <div className={`stickyModule ${activeStatus.ok ? "ok" : !activeStatus.half.ok ? "danger" : ""}`}>{activeStatus.ok ? "Modulvogntog klart" : !activeStatus.half.ok ? "Halvplass" : "Neste rutebil"}</div>
       </aside>
 
-      <nav className="mobileDock">
+      <nav className={`mobileDock ${selected ? "sheetOpenHidden" : ""}`}>
         <button onClick={() => setView("order")}>Ordre</button>
         <button onClick={() => setView("archive")}>Arkiv</button>
         <button onClick={() => setView("stats")}>Statistikk</button>
@@ -1060,44 +1097,20 @@ export default function Page() {
       </nav>
 
       {selected && (
-        <div className="sheetBackdrop" onClick={() => setSelected(null)}>
-          <section className="productSheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheetHandle" />
-            <div className="sheetHeader">
-              <div>
-                <span className="eyebrow dark">{selected.category.name}</span>
-                <h2>{selected.product}</h2>
-                <p>{buildMailName(selected.category.name, selected.product)}</p>
-              </div>
-              <button className="secondary sheetClose" onClick={() => setSelected(null)}>Lukk</button>
-            </div>
-
-            <div className={`sheetTotal ${productQty(selected.category, selected.product) ? "active" : ""} ${halfInvalid && selected.category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(selected.product) ? "danger" : ""}`}>
-              <span>{halfInvalid && selected.category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(selected.product) ? "Halvpall-regel ikke oppfylt" : "Valgt på denne varen"}</span>
-              <strong>{productQty(selected.category, selected.product)} pk</strong>
-            </div>
-
-            <div className="sheetLengthList">
-              {lengthsFor(selected.category, selected.product).map((length) => {
-                const qty = activeTruck.items[lineKey(selected.category.name, selected.product, length)] || 0;
-                const halfProduct = selected.category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(selected.product) && length === "2,4";
-                return (
-                  <div className={`sheetLengthRow ${qty ? "hasQty" : ""} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} key={length}>
-                    <div>
-                      <strong>{length === "Fallende" ? "Fallende lengder" : `${length} m`}</strong>
-                      <span>{buildMailName(selected.category.name, selected.product)}</span>
-                    </div>
-                    <div className="sheetQty">
-                      <button className="minus" onClick={() => changeQty(selected.category.name, selected.product, length, -1)}>−</button>
-                      <b>{qty}</b>
-                      <button className="plus" onClick={() => changeQty(selected.category.name, selected.product, length, 1)}>+</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        </div>
+        <FastProductSheet
+          category={selected.category}
+          product={selected.product}
+          lengths={lengthsFor(selected.category, selected.product)}
+          initialQuantities={Object.fromEntries(
+            lengthsFor(selected.category, selected.product).map((length) => [
+              length,
+              activeTruck.items[lineKey(selected.category.name, selected.product, length)] || 0,
+            ]),
+          )}
+          halfInvalid={halfInvalid}
+          onCommit={(deltas) => commitProductDeltas(selected.category.name, selected.product, deltas)}
+          onClose={() => setSelected(null)}
+        />
       )}
 
       <div className={`toast ${toast ? "show" : ""}`}>{toast}</div>

@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-54-stablesync",
-  "version": "5.4.0",
+  "name": "trelastordre-enterprise-60-refactor",
+  "version": "6.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
