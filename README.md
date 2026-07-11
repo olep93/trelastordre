@@ -32,3 +32,8 @@ Bruk innholdet i `firestore.rules`.
 - Fikset Map-iterasjon i statistikkfunksjonen.
 - Satte TypeScript target til ES2017.
 - Verifisert med lokal `npm run build`.
+
+
+## 6.1.2 Build Fix
+- La til manglende `truckFillPercent()`-funksjon.
+- Retter TypeScript-feilen fra Vercel på linjen som beregner fyllingsprosent.

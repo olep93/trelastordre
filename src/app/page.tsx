@@ -273,6 +273,17 @@ function moduleStatus(truck: Truck) {
   };
 }
 
+function truckFillPercent(truck: Truck) {
+  const count = countForTruck(truck);
+  const status = moduleStatus(truck);
+  const targetTotal = Math.max(1, status.target.gran + status.target.imp);
+
+  return Math.min(
+    100,
+    Math.round((count.total / targetTotal) * 100),
+  );
+}
+
 function mostOrderedFromArchive(sentOrders: SentOrder[]) {
   const quantities = new Map<string, number>();
 

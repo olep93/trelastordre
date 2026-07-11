@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-611-buildfix",
-  "version": "6.1.1",
+  "name": "trelastordre-enterprise-612-buildfix",
+  "version": "6.1.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
