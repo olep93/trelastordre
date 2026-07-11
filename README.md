@@ -26,3 +26,9 @@ Lengdevelgeren ligger nå i en egen, memoized React-komponent (`src/components/F
 ## Firebase Rules
 
 Bruk innholdet i `firestore.rules`.
+
+
+## 6.1.1 Build fix
+- Fikset Map-iterasjon i statistikkfunksjonen.
+- Satte TypeScript target til ES2017.
+- Verifisert med lokal `npm run build`.

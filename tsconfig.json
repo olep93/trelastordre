@@ -26,7 +26,8 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "target": "es2017"
   },
   "include": [
     "next-env.d.ts",

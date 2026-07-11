@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-61-performance-rewrite",
-  "version": "6.1.0",
+  "name": "trelastordre-enterprise-611-buildfix",
+  "version": "6.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",

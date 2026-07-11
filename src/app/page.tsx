@@ -289,7 +289,7 @@ function mostOrderedFromArchive(sentOrders: SentOrder[]) {
     });
   });
 
-  return [...quantities.entries()]
+  return Array.from(quantities.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([name, qty]) => ({ name, qty }));
