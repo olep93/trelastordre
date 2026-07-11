@@ -273,6 +273,28 @@ function moduleStatus(truck: Truck) {
   };
 }
 
+function mostOrderedFromArchive(sentOrders: SentOrder[]) {
+  const quantities = new Map<string, number>();
+
+  sentOrders.forEach((sent) => {
+    sent.body.split("\n").forEach((line) => {
+      const match = line.match(/^- (.+?) - (\d+) pk$/);
+      if (!match) return;
+
+      const product = match[1].trim();
+      const qty = Number(match[2]);
+      if (!Number.isFinite(qty)) return;
+
+      quantities.set(product, (quantities.get(product) || 0) + qty);
+    });
+  });
+
+  return [...quantities.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([name, qty]) => ({ name, qty }));
+}
+
 function orderText(order: WeeklyOrder) {
   const hasLines = order.trucks.some((truck) => truckLines(truck).length);
   if (!hasLines) return "";
@@ -803,8 +825,8 @@ export default function Page() {
         <div className="headerInner">
           <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
           <div className="headerText">
-            <h1>Trelastordre</h1>
-            <p>Uke {order.week} · {pendingSync ? "Venter på autosync..." : saving ? "Synker..." : "Synket"}</p>
+            <h1>Obs Bygg Lagerordre</h1>
+            <p>Enterprise 6.1 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
           </div>
           <button className="iconButton dangerSoft" onClick={resetOrder}>Nullstill</button>
         </div>
@@ -814,7 +836,7 @@ export default function Page() {
         <section className="presenceBar">
           <div>
             <strong>Hei, {userName} 👋</strong>
-            <span>Lokal hurtigmodus · autosync hvert ca. 8 sek · sist endret av {order.lastEditedBy || "ingen ennå"}</span>
+            <span>Hurtig lengdepanelet · samlet lagring · sist endret av {order.lastEditedBy || "ingen ennå"}</span>
           </div>
           <div className="presenceUsers">
             {presence.slice(0, 6).map((user) => {
@@ -998,24 +1020,7 @@ export default function Page() {
           <p className="exportHint">Outlook Web åpner Outlook i nettleser. «Åpne e-postapp» bruker standard e-postapp på enheten, og kan derfor åpne Gmail/iOS Mail hvis det er standardvalget.</p>
         </section>
 
-        <section className="activityPanel">
-          <div className="activityHeader">
-            <h2>Aktivitet</h2>
-            <p>Logg er deaktivert i StableSync for raskere mobilbruk.</p>
-          </div>
-          <div className="activityList">
-            {logs.slice(0, 6).map((log) => (
-              <div className="activityItem" key={log.id}>
-                <div className="activityDot" />
-                <div>
-                  <strong>{log.userName}</strong>
-                  <span>{log.text}</span>
-                  <small>{relative(log.timestamp)}</small>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+
 
           </>
         )}

@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-60-refactor",
-  "version": "6.0.0",
+  "name": "trelastordre-enterprise-61-performance-rewrite",
+  "version": "6.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
