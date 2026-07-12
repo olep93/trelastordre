@@ -18,7 +18,7 @@ import { categories, lengthsFor, buildMailName, type Category, type Material } f
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
 
-const RECIPIENT = "post@wood.no";
+const RECIPIENT = "post.wood@moelven.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
 
 type Truck = {
