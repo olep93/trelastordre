@@ -83,6 +83,19 @@ type SelectedProduct = {
   product: string;
 };
 
+
+function categoryImage(categoryName: string) {
+  const images: Record<string, string> = {
+    "K-Virke Gran": "/category-k-virke-gran.jpg",
+    "K-Virke Impregnert": "/category-k-virke-imp.jpg",
+    "Kledning Gran": "/category-kledning-gran.jpg",
+    "Kledning Impregnert": "/category-kledning-imp.jpg",
+    "Terrassebord / Altan / Vannbrett Impregnert": "/category-terrassebord-imp.jpg",
+  };
+
+  return images[categoryName] || "/category-k-virke-gran.jpg";
+}
+
 function randomId(prefix = "t") {
   return `${prefix}${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -971,7 +984,7 @@ export default function Page() {
               <section className={`category ${isOpen ? "" : "closed"}`} key={category.name}>
                 <button className="categoryHeader stickyCategoryHeader" onClick={() => setCategoryOpen((current) => ({ ...current, [category.name]: !(current[category.name] ?? true) }))}>
                   <div className="categoryTitle">
-                    <div className="categoryIcon">{category.icon}</div>
+                    <img className="categoryImage" src={categoryImage(category.name)} alt="" />
                     <div>
                       <h2>{category.name}</h2>
                       <small>{visible.length} varer · {categoryTotal} pk valgt</small>
@@ -988,7 +1001,7 @@ export default function Page() {
                       <button key={`${category.name}-${product}`} className={`productRow ${qty ? "hasQty" : ""} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} onClick={() => setSelected({ category, product })}>
                         <div className="productRowMain">
                           <strong>{product}</strong>
-                          <span>{buildMailName(category.name, product)}</span>
+                          
                         </div>
                         <div className="productRowSide">
                           <b>{qty}</b>
