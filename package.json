@@ -1,6 +1,6 @@
 {
-  "name": "trelastordre-enterprise-612-buildfix",
-  "version": "6.1.2",
+  "name": "trelastordre-enterprise-62-category-images",
+  "version": "6.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

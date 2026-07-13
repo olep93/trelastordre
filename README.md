@@ -37,3 +37,10 @@ Bruk innholdet i `firestore.rules`.
 ## 6.1.2 Build Fix
 - La til manglende `truckFillPercent()`-funksjon.
 - Retter TypeScript-feilen fra Vercel på linjen som beregner fyllingsprosent.
+
+
+## Enterprise 6.2
+- Kategoriheaderne bruker de fem opplastede produktbildene.
+- Fjernet oransje bokstavikoner.
+- Fjernet grå produktundertekst som gjentok produktnavnet.
+- Fjernet favoritt-/merkefunksjon.
