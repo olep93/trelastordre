@@ -1,20 +1,21 @@
-# Enterprise 7.2 – Moelven ordrebekreftelser
+# Trelastordre Enterprise 7.2
 
-## Implementert
-- Nye arkiverte ordre lagrer strukturerte `originalLines` i tillegg til eksisterende e-posttekst.
-- Arkiverte ordre har et eget panel for opplasting av Moelven-PDF.
-- PDF-en lagres i Firebase Storage under `sentOrders/{sentOrderId}/confirmations/`.
-- Uthentede data lagres i Firestore-underkolleksjonen `sentOrders/{sentOrderId}/confirmations`.
-- Parseren leser blant annet Moelven-ordrenummer, dato, NOBB/artikkelnummer, dimensjon, lengde, pakker, stykk/meter, pris, rabatt og netto.
-- Nyeste bekreftelse vises i en ryddig tabell.
-- Nye ordre får automatisk sammenligning mellom opprinnelig bestilling og bekreftet dimensjon/lengde/pakkeantall.
-- Flere bekreftelsesversjoner støttes.
+## Nytt
+- Nye arkivordre lagrer strukturerte original-linjer i tillegg til e-postteksten.
+- Arkivordre kan få én eller flere Moelven-ordrebekreftelser i PDF.
+- PDF lagres privat i Vercel Blob.
+- Varelinjer leses automatisk fra Moelvens tekstbaserte PDF-format.
+- Viser NOBB/artikkelnummer, kategori, dimensjon, lengde, pakker, PCS/m og nettobeløp.
+- Automatisk sammenligning mot opprinnelig bestilling for nye arkivordre.
+- Eldre arkivordre støtter PDF-opplasting, men mangler strukturert sammenligning.
 
-## Må publiseres i Firebase
-Prosjektet inneholder oppdaterte `firestore.rules` og en ny `storage.rules`. Begge må publiseres i Firebase Console eller via Firebase CLI før PDF-opplasting fungerer.
+## Vercel
+Blob Store må være koblet til prosjektet med standard variabelprefiks `BLOB` og `BLOB_READ_WRITE_TOKEN` tilgjengelig for Production og Preview.
 
-## Viktig om eldre arkivordrer
-Eldre arkivordrer har bare feltet `body`, ikke `originalLines`. PDF-opplasting og visning fungerer på disse, men automatisk avvikssammenligning blir tilgjengelig for nye arkiverte ordre. En senere migrering kan konvertere eldre `body`-tekst til strukturerte linjer.
+## Firestore
+Publiser `firestore.rules` fra prosjektet. Underkolleksjonen som brukes er:
 
-## NOBB
-NOBB-nummer lagres på hver bekreftelseslinje. Automatisk nett-oppslag mot NOBB/GTIN er ikke koblet inn i denne versjonen fordi det krever en stabil og tillatt datakilde/API. PDF-beskrivelsen brukes nå til dimensjon, lengde og produkttype.
+`sentOrders/{sentOrderId}/confirmations/{confirmationId}`
+
+## Begrensning i første versjon
+Serveropplasting er satt til maks 4 MB. Moelven-ordrebekreftelser er normalt langt mindre. Parseren er laget mot PDF-formatet i ordrebekreftelse W63408.

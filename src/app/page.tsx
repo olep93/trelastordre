@@ -17,8 +17,7 @@ import {
 import { categories, lengthsFor, buildMailName, type Category, type Material } from "@/data/products";
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
-import { OrderConfirmationPanel } from "@/components/OrderConfirmationPanel";
-import type { OriginalOrderLine } from "@/lib/moelvenConfirmation";
+import { OrderConfirmationPanel, type ArchivedOrderLine } from "@/components/OrderConfirmationPanel";
 
 const RECIPIENT = "post.wood@moelven.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
@@ -63,7 +62,7 @@ type SentOrder = {
   totalPackages: number;
   totalLines: number;
   lagerOrderNumber?: number;
-  originalLines?: OriginalOrderLine[];
+  originalLines?: ArchivedOrderLine[];
 };
 
 type LogEntry = {
@@ -321,12 +320,11 @@ function mostOrderedFromArchive(sentOrders: SentOrder[]) {
     .map(([name, qty]) => ({ name, qty }));
 }
 
-function structuredOrderLines(order: WeeklyOrder): OriginalOrderLine[] {
+function structuredOrderLines(order: WeeklyOrder): ArchivedOrderLine[] {
   return order.trucks.flatMap((truck) =>
     truckLines(truck).map((line) => ({
       category: line.category,
-      product: line.mailName,
-      dimension: line.displayName.match(/\d{2,3}x\d{2,3}/i)?.[0] || line.displayName,
+      dimension: line.displayName,
       length: line.length,
       packages: line.qty,
       material: line.material,
@@ -867,7 +865,7 @@ export default function Page() {
           <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
           <div className="headerText">
             <h1>Obs Bygg Lagerordre</h1>
-            <p>Enterprise 7.2 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
+            <p>Enterprise 6.1 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
           </div>
           <button className="iconButton dangerSoft" onClick={resetOrder}>Nullstill</button>
         </div>
@@ -1087,20 +1085,38 @@ export default function Page() {
                       <span>{formatTime(sent.sentAt)} · sendt av {sent.sentBy} · {sent.totalPackages} pk · {sent.totalLines} linjer</span>
                     </div>
                   </summary>
-                  <div className="originalOrderBlock">
+                  <div className="originalOrderSection">
                     <h3>Opprinnelig bestilling</h3>
-                    <textarea readOnly value={sent.body} />
-                  </div>
-                  <div className="archiveActions">
-                    <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
+                    {sent.originalLines?.length ? (
+                      <div className="confirmationTableWrap">
+                        <table className="confirmationTable originalTable">
+                          <thead><tr><th>Bil</th><th>Kategori</th><th>Dimensjon</th><th>Lengde</th><th>Pakker</th></tr></thead>
+                          <tbody>
+                            {sent.originalLines.map((line, index) => (
+                              <tr key={`${line.truckName}-${line.category}-${line.dimension}-${line.length}-${index}`}>
+                                <td>{line.truckName}</td><td>{line.category}</td><td>{line.dimension}</td><td>{line.length === "Fallende" ? line.length : `${line.length} m`}</td><td>{line.packages}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <textarea readOnly value={sent.body} />
+                    )}
                   </div>
                   {sent.id && (
                     <OrderConfirmationPanel
                       sentOrderId={sent.id}
-                      originalLines={sent.originalLines}
+                      year={sent.year}
+                      week={sent.week}
+                      lagerOrderNumber={sent.lagerOrderNumber}
                       uploadedBy={userName}
+                      originalLines={sent.originalLines}
                     />
                   )}
+                  <div className="archiveActions">
+                    <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
+                  </div>
                 </details>
               ))}
             </div>

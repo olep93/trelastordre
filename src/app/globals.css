@@ -1393,25 +1393,162 @@ textarea{
   .categoryImage{width:52px;height:42px;border-radius:10px;}
 }
 
-/* Enterprise 7.2 Moelven order confirmations */
-.originalOrderBlock h3,.confirmationPanel h3,.comparisonBlock h4{margin:0 0 10px;color:var(--obs-blue)}
-.confirmationPanel{margin:16px 0 4px;padding:16px;border:1px solid #cdd9e8;border-radius:20px;background:#f8fbff}
-.confirmationHeader{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
-.confirmationHeader p{margin:4px 0 0;color:var(--muted);font-weight:700;line-height:1.4}
-.uploadButton{display:inline-flex;align-items:center;justify-content:center;background:var(--obs-blue);color:#fff;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer;white-space:nowrap;min-height:44px}
-.uploadButton input{display:none}.uploadButton.disabled{opacity:.55;cursor:wait}
-.confirmationEmpty,.confirmationError{margin-top:14px;padding:12px;border-radius:14px;font-weight:800}
-.confirmationEmpty{background:#fff;border:1px dashed #b9c8da;color:var(--muted)}
-.confirmationError{background:var(--danger-bg);border:1px solid #f2aaa3;color:var(--danger)}
-.confirmationMeta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-.confirmationMeta span,.confirmationMeta a{background:#fff;border:1px solid #d8e2ee;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800;color:var(--obs-blue);text-decoration:none}
-.tableScroller{overflow:auto;border:1px solid #d7e1ed;border-radius:14px;background:#fff}
-.confirmationTable{width:100%;border-collapse:collapse;min-width:850px;font-size:13px}
-.confirmationTable th,.confirmationTable td{text-align:left;padding:10px;border-bottom:1px solid #e4ebf3;white-space:nowrap}
-.confirmationTable th{background:#eef4fb;color:var(--obs-blue);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
-.confirmationTable tbody tr:last-child td{border-bottom:0}
-.comparisonBlock{margin-top:16px}.comparisonList{display:grid;gap:8px}
-.comparisonRow{display:grid;grid-template-columns:140px 1fr 130px 140px;gap:10px;align-items:center;background:#fff;border:1px solid #dce5ef;border-left:6px solid var(--success);border-radius:12px;padding:10px;font-size:13px}
-.comparisonRow.changed{border-left-color:var(--warning)}.comparisonRow.added{border-left-color:var(--obs-blue-2)}.comparisonRow.missing{border-left-color:var(--danger)}
-.comparisonStatus{font-weight:900;color:var(--obs-blue)}.confirmationHistory{color:var(--muted);font-weight:800;font-size:12px}
-@media(max-width:720px){.confirmationHeader{flex-direction:column}.uploadButton{width:100%}.comparisonRow{grid-template-columns:1fr 1fr}.comparisonStatus{grid-column:1/-1}}
+/* Enterprise 7.2 – Moelven ordrebekreftelser */
+.originalOrderSection,
+.confirmationSection {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #dbe2ea;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.originalOrderSection h3,
+.confirmationSection h3,
+.confirmationSection h4 {
+  margin: 0 0 10px;
+  color: #142b55;
+}
+
+.confirmationHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.confirmationHeader p {
+  margin: 4px 0 0;
+  color: #5b6778;
+  font-size: 0.9rem;
+}
+
+.uploadButton,
+.secondaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid #17386e;
+  background: #17386e;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.uploadButton input { display: none; }
+.uploadButton.disabled { opacity: 0.65; cursor: wait; }
+
+.confirmationEmpty,
+.legacyNotice,
+.confirmationError {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: white;
+  color: #5b6778;
+}
+.confirmationError { background: #fff1f0; color: #a61b1b; border: 1px solid #ffc9c5; }
+.legacyNotice { background: #fff8e6; color: #765600; border: 1px solid #f2d48d; }
+
+.confirmationCard {
+  margin-top: 14px;
+  border: 1px solid #cfd8e3;
+  border-radius: 12px;
+  background: white;
+  overflow: hidden;
+}
+
+.confirmationCard > summary {
+  padding: 14px;
+  cursor: pointer;
+  background: #eef3f9;
+}
+
+.confirmationCard > summary div { display: flex; flex-direction: column; gap: 4px; }
+.confirmationCard > summary span { color: #5b6778; font-size: 0.86rem; }
+.currentBadge {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #dff5e8;
+  color: #16713a !important;
+  font-size: 0.72rem !important;
+}
+
+.confirmationMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  padding: 14px;
+  border-bottom: 1px solid #e4e9ef;
+  font-size: 0.9rem;
+}
+
+.confirmationMeta .secondaryLink {
+  margin-left: auto;
+  min-height: 36px;
+  background: white;
+  color: #17386e;
+}
+
+.comparisonBlock,
+.confirmationCard > h4,
+.confirmationCard > .confirmationTableWrap {
+  margin-left: 14px;
+  margin-right: 14px;
+}
+.comparisonBlock { margin-top: 14px; }
+.confirmationCard > h4 { margin-top: 18px; }
+.confirmationCard > .confirmationTableWrap { margin-bottom: 14px; }
+
+.confirmationTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #dde3ea;
+  border-radius: 10px;
+  background: white;
+}
+
+.confirmationTable {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.confirmationTable th,
+.confirmationTable td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #e8edf2;
+  text-align: left;
+  vertical-align: top;
+}
+.confirmationTable th { background: #edf2f7; color: #1d355d; }
+.confirmationTable tbody tr:last-child td { border-bottom: 0; }
+.compactTable { min-width: 600px; }
+
+.diffBadge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  background: #e8eef5;
+}
+.diff-lik .diffBadge { background: #dff5e8; color: #16713a; }
+.diff-endret .diffBadge { background: #fff1bd; color: #765600; }
+.diff-ny .diffBadge { background: #dcecff; color: #145da0; }
+.diff-mangler .diffBadge { background: #ffe1df; color: #a61b1b; }
+
+@media (max-width: 720px) {
+  .confirmationHeader { align-items: stretch; flex-direction: column; }
+  .uploadButton { width: 100%; }
+  .confirmationMeta .secondaryLink { margin-left: 0; width: 100%; }
+  .originalOrderSection, .confirmationSection { padding: 12px; }
+}
