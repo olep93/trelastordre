@@ -1,7 +1,15 @@
 type TextItemLike = { str: string; transform: number[]; width?: number };
 
 export async function extractPdfText(data: Uint8Array) {
+  if (typeof window === "undefined") {
+    throw new Error("PDF-lesing må kjøres i nettleseren.");
+  }
+
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/legacy/build/pdf.worker.mjs",
+    import.meta.url,
+  ).toString();
   const loadingTask = pdfjs.getDocument({ data, disableFontFace: true, useSystemFonts: true });
   const pdf = await loadingTask.promise;
   const pages: string[] = [];

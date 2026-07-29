@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { addDoc, collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import type { MoelvenConfirmationLine } from "@/lib/moelven-parser";
+import { extractPdfText } from "@/lib/pdf-text";
 
 export type ArchivedOrderLine = {
   category: string;
@@ -73,8 +74,13 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
     setError("");
     setUploading(true);
     try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const rawText = await extractPdfText(bytes);
+      if (!rawText.trim()) throw new Error("PDF-en inneholder ingen lesbar tekst.");
+
       const form = new FormData();
       form.append("file", file);
+      form.append("rawText", rawText);
       form.append("sentOrderId", sentOrderId);
       form.append("year", String(year));
       form.append("week", String(week));
@@ -115,7 +121,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
           <p>PDF-en leses automatisk. Opprinnelig bestilling beholdes uendret.</p>
         </div>
         <label className={`uploadButton ${uploading ? "disabled" : ""}`}>
-          {uploading ? "Leser PDF …" : confirmations.length ? "Last opp ny versjon" : "Last opp PDF"}
+          {uploading ? "Leser og lagrer PDF …" : confirmations.length ? "Last opp ny versjon" : "Last opp PDF"}
           <input ref={inputRef} type="file" accept="application/pdf,.pdf" disabled={uploading} onChange={(event) => upload(event.target.files?.[0])} />
         </label>
       </div>

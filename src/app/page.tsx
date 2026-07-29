@@ -888,7 +888,7 @@ export default function Page() {
 
         <nav className="appTabs">
           <button className={view === "order" ? "active" : ""} onClick={() => setView("order")}>Aktiv ordre</button>
-          <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}>Sendte bestillinger</button>
+          <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}>Arkiv</button>
           <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}>Statistikk</button>
         </nav>
 
@@ -1068,15 +1068,15 @@ export default function Page() {
         <section className="archivePanel openArchive" id="archive">
           <button className="archiveHeader" onClick={() => setArchiveOpen((v) => !v)}>
             <div>
-              <h2>Sendte bestillinger</h2>
-              <p>{sentOrders.length ? `${sentOrders.length} siste arkiverte` : "Ingen sendte bestillinger ennå"}</p>
+              <h2>Arkiv</h2>
+              <p>{sentOrders.length ? `${sentOrders.length} siste arkiverte` : "Arkivet er tomt"}</p>
             </div>
             <span>{archiveOpen ? "Lukk" : "Åpne"}</span>
           </button>
 
           {archiveOpen && (
             <div className="archiveList">
-              {sentOrders.length === 0 && <div className="emptyArchive">Send en bestilling for å få historikk her.</div>}
+              {sentOrders.length === 0 && <div className="emptyArchive">Arkiver en bestilling for å få den opp her.</div>}
               {sentOrders.map((sent) => (
                 <details className="archiveItem" key={sent.id}>
                   <summary>
@@ -1132,7 +1132,7 @@ export default function Page() {
             </div>
             <div className="statsGrid">
               <article>
-                <span>Sendte bestillinger</span>
+                <span>Arkiverte bestillinger</span>
                 <strong>{archiveSummary.totalSent}</strong>
               </article>
               <article>

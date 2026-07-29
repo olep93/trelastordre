@@ -1,6 +1,5 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { extractPdfText } from "@/lib/pdf-text";
 import { parseMoelvenText } from "@/lib/moelven-parser";
 
 export const runtime = "nodejs";
@@ -29,8 +28,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "PDF-en er større enn 4 MB." }, { status: 400 });
     }
 
+    const rawText = String(formData.get("rawText") || "").trim();
+    if (!rawText) {
+      return NextResponse.json({ error: "PDF-teksten mangler. Last siden på nytt og prøv igjen." }, { status: 400 });
+    }
+
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const rawText = await extractPdfText(bytes);
     const parsed = parseMoelvenText(rawText);
 
     if (!parsed.lines.length) {
@@ -63,6 +66,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Moelven upload failed", error);
-    return NextResponse.json({ error: "Kunne ikke laste opp eller lese PDF-en." }, { status: 500 });
+    const message = error instanceof Error ? error.message : "Ukjent serverfeil";
+    return NextResponse.json({ error: `Kunne ikke lagre ordrebekreftelsen: ${message}` }, { status: 500 });
   }
 }
