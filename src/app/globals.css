@@ -1392,3 +1392,26 @@ textarea{
 @media(max-width:720px){
   .categoryImage{width:52px;height:42px;border-radius:10px;}
 }
+
+/* Enterprise 7.2 Moelven order confirmations */
+.originalOrderBlock h3,.confirmationPanel h3,.comparisonBlock h4{margin:0 0 10px;color:var(--obs-blue)}
+.confirmationPanel{margin:16px 0 4px;padding:16px;border:1px solid #cdd9e8;border-radius:20px;background:#f8fbff}
+.confirmationHeader{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.confirmationHeader p{margin:4px 0 0;color:var(--muted);font-weight:700;line-height:1.4}
+.uploadButton{display:inline-flex;align-items:center;justify-content:center;background:var(--obs-blue);color:#fff;border-radius:14px;padding:12px 16px;font-weight:900;cursor:pointer;white-space:nowrap;min-height:44px}
+.uploadButton input{display:none}.uploadButton.disabled{opacity:.55;cursor:wait}
+.confirmationEmpty,.confirmationError{margin-top:14px;padding:12px;border-radius:14px;font-weight:800}
+.confirmationEmpty{background:#fff;border:1px dashed #b9c8da;color:var(--muted)}
+.confirmationError{background:var(--danger-bg);border:1px solid #f2aaa3;color:var(--danger)}
+.confirmationMeta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.confirmationMeta span,.confirmationMeta a{background:#fff;border:1px solid #d8e2ee;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800;color:var(--obs-blue);text-decoration:none}
+.tableScroller{overflow:auto;border:1px solid #d7e1ed;border-radius:14px;background:#fff}
+.confirmationTable{width:100%;border-collapse:collapse;min-width:850px;font-size:13px}
+.confirmationTable th,.confirmationTable td{text-align:left;padding:10px;border-bottom:1px solid #e4ebf3;white-space:nowrap}
+.confirmationTable th{background:#eef4fb;color:var(--obs-blue);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.confirmationTable tbody tr:last-child td{border-bottom:0}
+.comparisonBlock{margin-top:16px}.comparisonList{display:grid;gap:8px}
+.comparisonRow{display:grid;grid-template-columns:140px 1fr 130px 140px;gap:10px;align-items:center;background:#fff;border:1px solid #dce5ef;border-left:6px solid var(--success);border-radius:12px;padding:10px;font-size:13px}
+.comparisonRow.changed{border-left-color:var(--warning)}.comparisonRow.added{border-left-color:var(--obs-blue-2)}.comparisonRow.missing{border-left-color:var(--danger)}
+.comparisonStatus{font-weight:900;color:var(--obs-blue)}.confirmationHistory{color:var(--muted);font-weight:800;font-size:12px}
+@media(max-width:720px){.confirmationHeader{flex-direction:column}.uploadButton{width:100%}.comparisonRow{grid-template-columns:1fr 1fr}.comparisonStatus{grid-column:1/-1}}

@@ -17,6 +17,8 @@ import {
 import { categories, lengthsFor, buildMailName, type Category, type Material } from "@/data/products";
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
+import { OrderConfirmationPanel } from "@/components/OrderConfirmationPanel";
+import type { OriginalOrderLine } from "@/lib/moelvenConfirmation";
 
 const RECIPIENT = "post.wood@moelven.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
@@ -61,6 +63,7 @@ type SentOrder = {
   totalPackages: number;
   totalLines: number;
   lagerOrderNumber?: number;
+  originalLines?: OriginalOrderLine[];
 };
 
 type LogEntry = {
@@ -316,6 +319,20 @@ function mostOrderedFromArchive(sentOrders: SentOrder[]) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
     .map(([name, qty]) => ({ name, qty }));
+}
+
+function structuredOrderLines(order: WeeklyOrder): OriginalOrderLine[] {
+  return order.trucks.flatMap((truck) =>
+    truckLines(truck).map((line) => ({
+      category: line.category,
+      product: line.mailName,
+      dimension: line.displayName.match(/\d{2,3}x\d{2,3}/i)?.[0] || line.displayName,
+      length: line.length,
+      packages: line.qty,
+      material: line.material,
+      truckName: truck.name,
+    })),
+  );
 }
 
 function orderText(order: WeeklyOrder) {
@@ -719,6 +736,7 @@ export default function Page() {
       totalPackages: total.total,
       totalLines: total.lines,
       lagerOrderNumber,
+      originalLines: structuredOrderLines(order),
     } satisfies Omit<SentOrder, "id">);
 
     await addDoc(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), {
@@ -849,7 +867,7 @@ export default function Page() {
           <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
           <div className="headerText">
             <h1>Obs Bygg Lagerordre</h1>
-            <p>Enterprise 6.1 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
+            <p>Enterprise 7.2 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
           </div>
           <button className="iconButton dangerSoft" onClick={resetOrder}>Nullstill</button>
         </div>
@@ -1069,10 +1087,20 @@ export default function Page() {
                       <span>{formatTime(sent.sentAt)} · sendt av {sent.sentBy} · {sent.totalPackages} pk · {sent.totalLines} linjer</span>
                     </div>
                   </summary>
-                  <textarea readOnly value={sent.body} />
+                  <div className="originalOrderBlock">
+                    <h3>Opprinnelig bestilling</h3>
+                    <textarea readOnly value={sent.body} />
+                  </div>
                   <div className="archiveActions">
                     <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
                   </div>
+                  {sent.id && (
+                    <OrderConfirmationPanel
+                      sentOrderId={sent.id}
+                      originalLines={sent.originalLines}
+                      uploadedBy={userName}
+                    />
+                  )}
                 </details>
               ))}
             </div>

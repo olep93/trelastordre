@@ -8,6 +8,10 @@ service cloud.firestore {
 
     match /sentOrders/{sentOrderId} {
       allow read, write: if true;
+
+      match /confirmations/{confirmationId} {
+        allow read, write: if true;
+      }
     }
 
     match /changeLogs/{orderId}/entries/{entryId} {
