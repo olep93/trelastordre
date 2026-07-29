@@ -1552,3 +1552,99 @@ textarea{
   .confirmationMeta .secondaryLink { margin-left: 0; width: 100%; }
   .originalOrderSection, .confirmationSection { padding: 12px; }
 }
+
+/* Enterprise 7.2.3 – ryddigere Moelven-varelinjer */
+.productConfirmationTable {
+  min-width: 700px;
+  table-layout: fixed;
+  font-size: 0.9rem;
+}
+.productConfirmationTable th:nth-child(1) { width: 58px; }
+.productConfirmationTable th:nth-child(3) { width: 82px; text-align: center; }
+.productConfirmationTable th:nth-child(4) { width: 105px; text-align: center; }
+.productConfirmationTable th:nth-child(5) { width: 130px; text-align: right; }
+.productConfirmationTable tbody tr:nth-child(even) { background: #f8fafc; }
+.productConfirmationTable tbody tr:hover { background: #eef5ff; }
+.productConfirmationTable td { vertical-align: middle; padding-top: 12px; padding-bottom: 12px; }
+.positionCell { color: #66758a; font-weight: 700; text-align: center !important; }
+.confirmationProductCell strong {
+  display: block;
+  color: #102b55;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+.confirmationProductMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  color: #657286;
+  font-size: 0.78rem;
+}
+.categoryPill {
+  display: inline-flex;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #e8eef6;
+  color: #28466f;
+  font-weight: 700;
+}
+.numericCell { text-align: center !important; }
+.numericCell strong { display: block; color: #102b55; font-size: 1rem; }
+.numericCell span { display: block; margin-top: 2px; color: #6b7788; font-size: 0.75rem; }
+.moneyCell { text-align: right !important; font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .confirmationTableWrap:has(.productConfirmationTable) {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+  .productConfirmationTable,
+  .productConfirmationTable tbody,
+  .productConfirmationTable tr,
+  .productConfirmationTable td { display: block; width: 100%; min-width: 0; }
+  .productConfirmationTable thead { display: none; }
+  .productConfirmationTable tr {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 12px;
+    border: 1px solid #dce4ed;
+    border-radius: 11px;
+    background: #fff !important;
+  }
+  .productConfirmationTable td { border: 0; padding: 0; text-align: left !important; }
+  .productConfirmationTable .positionCell {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: auto;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #edf2f7;
+    font-size: 0.75rem;
+  }
+  .confirmationProductCell { padding-right: 44px !important; }
+  .confirmationProductMeta { margin-bottom: 11px; }
+  .productConfirmationTable .numericCell,
+  .productConfirmationTable .moneyCell {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    width: auto;
+    margin-right: 18px;
+  }
+  .productConfirmationTable .numericCell strong,
+  .productConfirmationTable .numericCell span { display: inline; }
+  .productConfirmationTable .numericCell::before { color: #657286; font-size: 0.75rem; font-weight: 600; }
+  .productConfirmationTable .numericCell:nth-of-type(3)::before { content: "Pakker: "; }
+  .productConfirmationTable .numericCell:nth-of-type(4)::before { content: "Antall: "; }
+  .productConfirmationTable .moneyCell {
+    display: block;
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid #edf0f4;
+  }
+  .productConfirmationTable .moneyCell::before { content: "Netto: "; color: #657286; font-size: 0.75rem; font-weight: 600; }
+}

@@ -3,6 +3,7 @@ export type MoelvenConfirmationLine = {
   deliveryDate: string;
   articleNumber: string;
   description: string;
+  productName: string;
   dimension: string;
   length: string;
   packages: number;
@@ -38,6 +39,23 @@ function normalizeLength(mm?: string) {
   if (!mm) return "Fallende";
   const meters = Number(mm) / 1000;
   return meters.toLocaleString("nb-NO", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+
+function buildProductName(description: string, material: "gran" | "impregnert" | "ukjent", dimension: string, length: string) {
+  const upper = description.toUpperCase();
+  let base = "Trelast";
+
+  if (upper.includes("TERRASSE")) base = "Terrassebord kl. 1";
+  else if (upper.includes("UNDERPANEL")) base = "Underpanel";
+  else if (upper.includes("REKTKLED")) base = "Rektangulær kledning";
+  else if (upper.includes("K-VIRKE C24")) base = "K-virke C24";
+  else if (upper.includes("LEKT BNT")) base = "Lekt bunt";
+  else if (upper.includes("LEKT")) base = "Lekt";
+
+  const materialName = material === "impregnert" ? "impregnert" : material === "gran" ? "gran" : "";
+  const lengthName = length === "Fallende" ? "fallende lengder" : `${length} m`;
+  return [base, materialName, dimension, lengthName].filter(Boolean).join(" ");
 }
 
 function inferCategory(description: string, material: "gran" | "impregnert" | "ukjent") {
@@ -77,14 +95,18 @@ export function parseMoelvenText(rawText: string): MoelvenConfirmation {
       .replace(/\s+/g, " ")
       .trim();
 
+    const dimension = `${Number(productMatch[1])}x${Number(productMatch[2])}`;
+    const length = normalizeLength(productMatch[3]);
+
     lines.push({
       position: Number(match[1]),
       deliveryDate: match[2],
       articleNumber: match[3],
       packages: Number(match[4]),
       description,
-      dimension: `${Number(productMatch[1])}x${Number(productMatch[2])}`,
-      length: normalizeLength(productMatch[3]),
+      productName: buildProductName(description, material, dimension, length),
+      dimension,
+      length,
       quantity: Number(productMatch[4].replace(/\s/g, "")),
       quantityUnit: productMatch[5].toUpperCase() === "PCS" ? "PCS" : "m",
       price: parseNorwegianNumber(firstLineNumbers?.[1]),

@@ -45,6 +45,24 @@ function productKey(dimension: string, length: string) {
   return `${dimension.toLowerCase().replace(/\s/g, "")}__${length.replace(".", ",")}`;
 }
 
+
+function displayProductName(line: MoelvenConfirmationLine) {
+  if (line.productName) return line.productName;
+
+  const upper = (line.description || "").toUpperCase();
+  let base = "Trelast";
+  if (upper.includes("TERRASSE")) base = "Terrassebord kl. 1";
+  else if (upper.includes("UNDERPANEL")) base = "Underpanel";
+  else if (upper.includes("REKTKLED")) base = "Rektangulær kledning";
+  else if (upper.includes("K-VIRKE C24")) base = "K-virke C24";
+  else if (upper.includes("LEKT BNT")) base = "Lekt bunt";
+  else if (upper.includes("LEKT")) base = "Lekt";
+
+  const material = line.material === "impregnert" ? "impregnert" : line.material === "gran" ? "gran" : "";
+  const length = line.length === "Fallende" ? "fallende lengder" : `${line.length} m`;
+  return [base, material, line.dimension, length].filter(Boolean).join(" ");
+}
+
 function money(value?: number) {
   if (value == null) return "–";
   return new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 2 }).format(value);
@@ -198,21 +216,24 @@ function ConfirmationView({ confirmation, originalLines, current }: { confirmati
 
       <h4>Lest fra ordrebekreftelse fra Moelven</h4>
       <div className="confirmationTableWrap">
-        <table className="confirmationTable">
+        <table className="confirmationTable productConfirmationTable">
           <thead>
-            <tr><th>Pos.</th><th>NOBB</th><th>Kategori</th><th>Dimensjon</th><th>Lengde</th><th>Pakker</th><th>Antall</th><th>Netto</th></tr>
+            <tr><th>Pos.</th><th>Vare</th><th>Pakker</th><th>Antall</th><th>Netto</th></tr>
           </thead>
           <tbody>
             {confirmation.lines.map((line) => (
               <tr key={`${line.position}-${line.articleNumber}`}>
-                <td>{line.position}</td>
-                <td>{line.articleNumber}</td>
-                <td>{line.category}</td>
-                <td>{line.dimension}</td>
-                <td>{line.length === "Fallende" ? line.length : `${line.length} m`}</td>
-                <td>{line.packages}</td>
-                <td>{line.quantity.toLocaleString("nb-NO")} {line.quantityUnit}</td>
-                <td>{money(line.netAmount)}</td>
+                <td className="positionCell">{line.position}</td>
+                <td className="confirmationProductCell">
+                  <strong>{displayProductName(line)}</strong>
+                  <span className="confirmationProductMeta">
+                    <span className="categoryPill">{line.category}</span>
+                    <span>NOBB {line.articleNumber}</span>
+                  </span>
+                </td>
+                <td className="numericCell"><strong>{line.packages}</strong><span>pk</span></td>
+                <td className="numericCell"><strong>{line.quantity.toLocaleString("nb-NO")}</strong><span>{line.quantityUnit}</span></td>
+                <td className="moneyCell">{money(line.netAmount)}</td>
               </tr>
             ))}
           </tbody>
