@@ -74,11 +74,55 @@ function fileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1).replace(".", ",")} MB`;
 }
 
+type CombinedLine = MoelvenConfirmationLine & {
+  sourceOrderNumbers: string[];
+  hasNetAmount: boolean;
+};
+
+function combineConfirmationLines(confirmations: ConfirmationRecord[]) {
+  const combined = new Map<string, CombinedLine>();
+
+  confirmations.forEach((confirmation) => {
+    confirmation.lines.forEach((line) => {
+      const key = line.articleNumber || `${productKey(line.dimension, line.length)}__${line.quantityUnit}`;
+      const existing = combined.get(key);
+      const orderNumber = confirmation.orderNumber;
+
+      if (!existing) {
+        combined.set(key, {
+          ...line,
+          packages: line.packages || 0,
+          quantity: line.quantity || 0,
+          netAmount: line.netAmount || 0,
+          sourceOrderNumbers: orderNumber ? [orderNumber] : [],
+          hasNetAmount: line.netAmount != null,
+        });
+        return;
+      }
+
+      existing.packages += line.packages || 0;
+      existing.quantity += line.quantity || 0;
+      existing.netAmount = (existing.netAmount || 0) + (line.netAmount || 0);
+      existing.hasNetAmount ||= line.netAmount != null;
+      if (orderNumber && !existing.sourceOrderNumbers.includes(orderNumber)) existing.sourceOrderNumbers.push(orderNumber);
+    });
+  });
+
+  return Array.from(combined.values()).sort((a, b) =>
+    `${a.category} ${displayProductName(a)}`.localeCompare(`${b.category} ${displayProductName(b)}`, "nb-NO"),
+  );
+}
+
 export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumber, uploadedBy, originalLines = [] }: Props) {
   const [confirmations, setConfirmations] = useState<ConfirmationRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const combinedLines = useMemo(() => combineConfirmationLines(confirmations), [confirmations]);
+  const combinedNet = useMemo(
+    () => confirmations.reduce((sum, confirmation) => sum + (confirmation.totalNet || 0), 0),
+    [confirmations],
+  );
 
   useEffect(() => {
     const ref = collection(db, "sentOrders", sentOrderId, "confirmations");
@@ -153,6 +197,42 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
           <span>Alle PDF-er beholdes på denne lagerordren.</span>
         </div>
       )}
+
+      {!!combinedLines.length && (
+        <div className="combinedConfirmation">
+          <div className="combinedConfirmationHeader">
+            <div>
+              <h4>Samlet ordrebekreftelse</h4>
+              <p>Summert fra {confirmations.length} {confirmations.length === 1 ? "PDF" : "PDF-er"} · {combinedLines.length} varelinjer</p>
+            </div>
+            <strong>{money(combinedNet)}</strong>
+          </div>
+          <div className="confirmationTableWrap combinedTableWrap">
+            <table className="confirmationTable combinedConfirmationTable">
+              <thead><tr><th>Vare</th><th>Pakker</th><th>Antall</th><th>Netto</th></tr></thead>
+              <tbody>
+                {combinedLines.map((line) => (
+                  <tr key={line.articleNumber || `${line.dimension}-${line.length}-${line.quantityUnit}`}>
+                    <td className="confirmationProductCell">
+                      <strong>{displayProductName(line)}</strong>
+                      <span className="combinedProductMeta">
+                        NOBB {line.articleNumber || "–"}
+                        {line.sourceOrderNumbers.length > 0 && ` · Moelven ${line.sourceOrderNumbers.join(", ")}`}
+                      </span>
+                    </td>
+                    <td className="combinedNumber"><strong>{line.packages}</strong><span> pk</span></td>
+                    <td className="combinedNumber"><strong>{line.quantity.toLocaleString("nb-NO")}</strong><span> {line.quantityUnit}</span></td>
+                    <td className="moneyCell">{line.hasNetAmount ? money(line.netAmount) : "–"}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot><tr><td>Totalt fra PDF-ene</td><td>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pk</td><td></td><td>{money(combinedNet)}</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {!!confirmations.length && <h4 className="sourceDocumentsTitle">Originale PDF-er</h4>}
 
       {confirmations.map((confirmation) => (
         <ConfirmationView
