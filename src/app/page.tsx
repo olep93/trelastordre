@@ -825,16 +825,12 @@ export default function Page() {
     return { totalSent, totalPackages, totalLines, avgPackages };
   }
 
-  function currentWeekSentOrders() {
-    return sentOrders.filter((sent) => sent.week === order.week && sent.year === order.year);
-  }
-
   function currentLagerOrderNumber() {
-    const numbers = currentWeekSentOrders()
+    const numbers = sentOrders
       .map((sent) => sent.lagerOrderNumber || 0)
       .filter(Boolean);
 
-    if (!numbers.length) return currentWeekSentOrders().length + 1;
+    if (!numbers.length) return 1;
     return Math.max(...numbers) + 1;
   }
 
