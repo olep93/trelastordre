@@ -139,7 +139,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
           <p>PDF-en leses automatisk. Opprinnelig bestilling beholdes uendret.</p>
         </div>
         <label className={`uploadButton ${uploading ? "disabled" : ""}`}>
-          {uploading ? "Leser og lagrer PDF …" : confirmations.length ? "Last opp ny versjon" : "Last opp PDF"}
+          {uploading ? "Leser og lagrer PDF …" : confirmations.length ? "Legg til en PDF" : "Last opp PDF"}
           <input ref={inputRef} type="file" accept="application/pdf,.pdf" disabled={uploading} onChange={(event) => upload(event.target.files?.[0])} />
         </label>
       </div>
@@ -147,19 +147,25 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
       {error && <div className="confirmationError">{error}</div>}
       {!confirmations.length && !uploading && <div className="confirmationEmpty">Ingen ordrebekreftelse er lastet opp ennå.</div>}
 
-      {confirmations.map((confirmation, index) => (
+      {!!confirmations.length && (
+        <div className="confirmationCount">
+          <strong>{confirmations.length} {confirmations.length === 1 ? "ordrebekreftelse" : "ordrebekreftelser"}</strong>
+          <span>Alle PDF-er beholdes på denne lagerordren.</span>
+        </div>
+      )}
+
+      {confirmations.map((confirmation) => (
         <ConfirmationView
           key={confirmation.id}
           confirmation={confirmation}
           originalLines={originalLines}
-          current={index === 0}
         />
       ))}
     </section>
   );
 }
 
-function ConfirmationView({ confirmation, originalLines, current }: { confirmation: ConfirmationRecord; originalLines: ArchivedOrderLine[]; current: boolean }) {
+function ConfirmationView({ confirmation, originalLines }: { confirmation: ConfirmationRecord; originalLines: ArchivedOrderLine[] }) {
   const comparison = useMemo(() => {
     const original = new Map<string, number>();
     originalLines.forEach((line) => original.set(productKey(line.dimension, line.length), (original.get(productKey(line.dimension, line.length)) || 0) + line.packages));
@@ -178,12 +184,13 @@ function ConfirmationView({ confirmation, originalLines, current }: { confirmati
 
   const hasOriginal = originalLines.length > 0;
   return (
-    <details className="confirmationCard" open={current}>
+    <details className="confirmationCard">
       <summary>
         <div>
-          <strong>Ordrebekreftelse {confirmation.version} {current && <span className="currentBadge">Gjeldende</span>}</strong>
+          <strong>{confirmation.orderNumber ? `Moelven-ordre ${confirmation.orderNumber}` : `Ordrebekreftelse ${confirmation.version}`}</strong>
           <span>{confirmation.fileName} · {fileSize(confirmation.fileSize)} · lastet opp av {confirmation.uploadedBy}</span>
         </div>
+        <span className="confirmationSummaryAmount">{money(confirmation.totalNet)}</span>
       </summary>
 
       <div className="confirmationMeta">

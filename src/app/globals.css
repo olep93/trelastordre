@@ -1467,6 +1467,10 @@ textarea{
   padding: 14px;
   cursor: pointer;
   background: #eef3f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .confirmationCard > summary div { display: flex; flex-direction: column; gap: 4px; }
@@ -1480,6 +1484,81 @@ textarea{
   color: #16713a !important;
   font-size: 0.72rem !important;
 }
+.confirmationSummaryAmount { color: #17386e !important; font-weight: 800; white-space: nowrap; }
+.confirmationCount {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf1f8;
+  color: #17386e;
+  font-size: .86rem;
+}
+.confirmationCount span { color: #5b6778; }
+
+/* Enterprise 7.3 – lesbart ordrearkiv */
+.archiveToolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 2px;
+  padding: 4px 2px 8px;
+}
+.archiveToolbar label { display: grid; gap: 6px; width: min(520px, 100%); }
+.archiveToolbar label > span { color: #334b6b; font-size: .78rem; font-weight: 800; }
+.archiveToolbar input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #cfd9e6;
+  border-radius: 12px;
+  background: #fff;
+  color: #102b55;
+  font: inherit;
+}
+.archiveResultCount { color: #657286; font-size: .85rem; white-space: nowrap; padding-bottom: 12px; }
+.archiveItem > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; }
+.archiveOrderIdentity { min-width: 0; }
+.archiveOrderIdentity .archiveOrderNumber {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 7px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #17386e;
+  color: #fff;
+  font-size: .72rem;
+  letter-spacing: .02em;
+}
+.archiveOrderIdentity strong { overflow-wrap: anywhere; }
+.archiveOrderFacts { display: grid; grid-template-columns: repeat(3, minmax(86px, auto)); gap: 8px; }
+.archiveOrderFacts > span {
+  display: grid !important;
+  gap: 1px;
+  min-height: 54px;
+  align-content: center;
+  padding: 7px 11px;
+  border: 1px solid #dce4ed;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+}
+.archiveOrderFacts strong { font-size: .9rem !important; }
+.sectionTitleRow { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sectionTitleRow h3 { margin-bottom: 3px; }
+.sectionTitleRow p { margin: 0; color: #657286; font-size: .82rem; }
+.sectionTitleRow > span { padding: 6px 9px; border-radius: 999px; background: #e8eef6; color: #28466f; font-size: .78rem; font-weight: 800; white-space: nowrap; }
+.originalOrderTable { min-width: 0; table-layout: fixed; }
+.originalOrderTable th:last-child { width: 100px; text-align: center; }
+.originalOrderTable tbody tr:nth-child(even) { background: #f8fafc; }
+.archiveProductCell strong { display: block; color: #102b55; font-size: .94rem; }
+.archiveProductCell span { display: block; margin-top: 4px; color: #657286; font-size: .78rem; }
+.archivePackagesCell { text-align: center !important; }
+.archivePackagesCell strong { color: #102b55; font-size: 1rem; }
+.archivePackagesCell span { margin-left: 4px; color: #657286; font-size: .75rem; }
 
 .confirmationMeta {
   display: flex;
@@ -1551,6 +1630,15 @@ textarea{
   .uploadButton { width: 100%; }
   .confirmationMeta .secondaryLink { margin-left: 0; width: 100%; }
   .originalOrderSection, .confirmationSection { padding: 12px; }
+  .archiveToolbar { align-items: stretch; flex-direction: column; gap: 4px; }
+  .archiveResultCount { padding: 0 2px 4px; }
+  .archiveItem > summary { grid-template-columns: 1fr; gap: 12px; }
+  .archiveOrderFacts { grid-template-columns: repeat(3, 1fr); }
+  .archiveOrderFacts > span { min-width: 0; padding: 6px 4px; }
+  .sectionTitleRow { align-items: flex-start; }
+  .confirmationCount { flex-direction: column; gap: 3px; }
+  .confirmationCard > summary { align-items: flex-start; }
+  .confirmationSummaryAmount { padding-top: 2px; }
 }
 
 /* Enterprise 7.2.3 – ryddigere Moelven-varelinjer */

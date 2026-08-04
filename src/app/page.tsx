@@ -419,6 +419,7 @@ export default function Page() {
   const pendingQtyRef = useRef<Record<string, { category: string; product: string; length: string; delta: number; truckIndex: number }>>({});
   const flushTimerRef = useRef<number | null>(null);
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
+  const [archiveSearch, setArchiveSearch] = useState("");
   const [view, setView] = useState<"order" | "archive" | "stats">("order");
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -540,6 +541,14 @@ export default function Page() {
 
   const archiveSummary = useMemo(() => archiveStats(), [sentOrders]);
   const topProducts = useMemo(() => mostOrderedFromArchive(sentOrders), [sentOrders]);
+  const visibleSentOrders = useMemo(() => {
+    const needle = archiveSearch.trim().toLocaleLowerCase("nb-NO");
+    if (!needle) return sentOrders;
+    return sentOrders.filter((sent) =>
+      [sent.subject, sent.sentBy, sent.lagerOrderNumber, sent.week, sent.year, sent.body]
+        .some((value) => String(value ?? "").toLocaleLowerCase("nb-NO").includes(needle)),
+    );
+  }, [archiveSearch, sentOrders]);
 
   function showToast(message: string) {
     setToast(message);
@@ -1076,25 +1085,53 @@ export default function Page() {
 
           {archiveOpen && (
             <div className="archiveList">
+              {!!sentOrders.length && (
+                <div className="archiveToolbar">
+                  <label>
+                    <span>Søk i arkivet</span>
+                    <input
+                      type="search"
+                      value={archiveSearch}
+                      onChange={(event) => setArchiveSearch(event.target.value)}
+                      placeholder="Lagerordre, uke, vare eller ansatt …"
+                    />
+                  </label>
+                  <div className="archiveResultCount">Viser <strong>{visibleSentOrders.length}</strong> av {sentOrders.length}</div>
+                </div>
+              )}
               {sentOrders.length === 0 && <div className="emptyArchive">Arkiver en bestilling for å få den opp her.</div>}
-              {sentOrders.map((sent) => (
+              {!!sentOrders.length && visibleSentOrders.length === 0 && <div className="emptyArchive">Ingen lagerordrer matcher søket.</div>}
+              {visibleSentOrders.map((sent) => (
                 <details className="archiveItem" key={sent.id}>
                   <summary>
-                    <div>
-                      <strong>Lagerordre {sent.lagerOrderNumber || "?"} · {sent.subject}</strong>
-                      <span>{formatTime(sent.sentAt)} · sendt av {sent.sentBy} · {sent.totalPackages} pk · {sent.totalLines} linjer</span>
+                    <div className="archiveOrderIdentity">
+                      <span className="archiveOrderNumber">Lagerordre {sent.lagerOrderNumber || "?"}</span>
+                      <strong>{sent.subject}</strong>
+                      <span>{formatTime(sent.sentAt)} · arkivert av {sent.sentBy}</span>
+                    </div>
+                    <div className="archiveOrderFacts">
+                      <span><strong>{sent.totalPackages}</strong> pakker</span>
+                      <span><strong>{sent.totalLines}</strong> varelinjer</span>
+                      <span><strong>Uke {sent.week}</strong> / {sent.year}</span>
                     </div>
                   </summary>
                   <div className="originalOrderSection">
-                    <h3>Opprinnelig bestilling</h3>
+                    <div className="sectionTitleRow">
+                      <div><h3>Opprinnelig bestilling</h3><p>Denne bestillingen endres aldri av opplastede PDF-er.</p></div>
+                      <span>{sent.totalPackages} pakker</span>
+                    </div>
                     {sent.originalLines?.length ? (
                       <div className="confirmationTableWrap">
-                        <table className="confirmationTable originalTable">
-                          <thead><tr><th>Bil</th><th>Kategori</th><th>Dimensjon</th><th>Lengde</th><th>Pakker</th></tr></thead>
+                        <table className="confirmationTable originalOrderTable">
+                          <thead><tr><th>Vare</th><th>Pakker</th></tr></thead>
                           <tbody>
                             {sent.originalLines.map((line, index) => (
                               <tr key={`${line.truckName}-${line.category}-${line.dimension}-${line.length}-${index}`}>
-                                <td>{line.truckName}</td><td>{line.category}</td><td>{line.dimension}</td><td>{line.length === "Fallende" ? line.length : `${line.length} m`}</td><td>{line.packages}</td>
+                                <td className="archiveProductCell">
+                                  <strong>{line.dimension} · {line.length === "Fallende" ? line.length : `${line.length} m`}</strong>
+                                  <span>{line.category} · {line.truckName}</span>
+                                </td>
+                                <td className="archivePackagesCell"><strong>{line.packages}</strong><span>pk</span></td>
                               </tr>
                             ))}
                           </tbody>
