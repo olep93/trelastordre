@@ -18,6 +18,7 @@ import { categories, lengthsFor, buildMailName, type Category, type Material } f
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
 import { OrderConfirmationPanel, type ArchivedOrderLine } from "@/components/OrderConfirmationPanel";
+import type { OrderPdfLine } from "@/lib/order-pdf";
 
 const RECIPIENT = "post.wood@moelven.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
@@ -791,6 +792,33 @@ export default function Page() {
     URL.revokeObjectURL(url);
   }
 
+  function pdfLinesForOrder(sent: SentOrder): OrderPdfLine[] {
+    if (sent.originalLines?.length) {
+      return sent.originalLines.map((line) => ({
+        name: `${line.dimension} · ${line.length === "Fallende" ? line.length : `${line.length} m`}`,
+        detail: `${line.category} · ${line.truckName}`,
+        packages: line.packages,
+      }));
+    }
+
+    return sent.body.split("\n").flatMap((line) => {
+      const match = line.match(/^- (.+?) - (\d+) pk$/);
+      return match ? [{ name: match[1], packages: Number(match[2]) }] : [];
+    });
+  }
+
+  async function createOrderPdf(sent: SentOrder) {
+    const { generateOrderPdf } = await import("@/lib/order-pdf");
+    await generateOrderPdf({
+      lagerOrderNumber: sent.lagerOrderNumber,
+      week: sent.week,
+      year: sent.year,
+      orderedBy: sent.sentBy,
+      orderedAt: sent.sentAt,
+      lines: pdfLinesForOrder(sent),
+    });
+  }
+
   function exportAllArchiveCsv() {
     const rows = [
       ["Sendt", "Sendt av", "Emne", "Pakker", "Linjer", "Bestilling"],
@@ -1148,6 +1176,7 @@ export default function Page() {
                     />
                   )}
                   <div className="archiveActions">
+                    <button className="primary" onClick={() => createOrderPdf(sent)}>Generer PDF</button>
                     <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
                   </div>
                 </details>

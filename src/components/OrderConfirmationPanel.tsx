@@ -63,11 +63,6 @@ function displayProductName(line: MoelvenConfirmationLine) {
   return [base, material, line.dimension, length].filter(Boolean).join(" ");
 }
 
-function money(value?: number) {
-  if (value == null) return "–";
-  return new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 2 }).format(value);
-}
-
 function fileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} kB`;
@@ -76,7 +71,6 @@ function fileSize(bytes: number) {
 
 type CombinedLine = MoelvenConfirmationLine & {
   sourceOrderNumbers: string[];
-  hasNetAmount: boolean;
 };
 
 function combineConfirmationLines(confirmations: ConfirmationRecord[]) {
@@ -93,17 +87,13 @@ function combineConfirmationLines(confirmations: ConfirmationRecord[]) {
           ...line,
           packages: line.packages || 0,
           quantity: line.quantity || 0,
-          netAmount: line.netAmount || 0,
           sourceOrderNumbers: orderNumber ? [orderNumber] : [],
-          hasNetAmount: line.netAmount != null,
         });
         return;
       }
 
       existing.packages += line.packages || 0;
       existing.quantity += line.quantity || 0;
-      existing.netAmount = (existing.netAmount || 0) + (line.netAmount || 0);
-      existing.hasNetAmount ||= line.netAmount != null;
       if (orderNumber && !existing.sourceOrderNumbers.includes(orderNumber)) existing.sourceOrderNumbers.push(orderNumber);
     });
   });
@@ -119,10 +109,6 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const combinedLines = useMemo(() => combineConfirmationLines(confirmations), [confirmations]);
-  const combinedNet = useMemo(
-    () => confirmations.reduce((sum, confirmation) => sum + (confirmation.totalNet || 0), 0),
-    [confirmations],
-  );
 
   useEffect(() => {
     const ref = collection(db, "sentOrders", sentOrderId, "confirmations");
@@ -205,11 +191,11 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
               <h4>Samlet ordrebekreftelse</h4>
               <p>Summert fra {confirmations.length} {confirmations.length === 1 ? "PDF" : "PDF-er"} · {combinedLines.length} varelinjer</p>
             </div>
-            <strong>{money(combinedNet)}</strong>
+            <strong>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pakker</strong>
           </div>
           <div className="confirmationTableWrap combinedTableWrap">
             <table className="confirmationTable combinedConfirmationTable">
-              <thead><tr><th>Vare</th><th>Pakker</th><th>Antall</th><th>Netto</th></tr></thead>
+              <thead><tr><th>Vare</th><th>Pakker</th><th>Antall</th></tr></thead>
               <tbody>
                 {combinedLines.map((line) => (
                   <tr key={line.articleNumber || `${line.dimension}-${line.length}-${line.quantityUnit}`}>
@@ -222,11 +208,10 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
                     </td>
                     <td className="combinedNumber"><strong>{line.packages}</strong><span> pk</span></td>
                     <td className="combinedNumber"><strong>{line.quantity.toLocaleString("nb-NO")}</strong><span> {line.quantityUnit}</span></td>
-                    <td className="moneyCell">{line.hasNetAmount ? money(line.netAmount) : "–"}</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot><tr><td>Totalt fra PDF-ene</td><td>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pk</td><td></td><td>{money(combinedNet)}</td></tr></tfoot>
+              <tfoot><tr><td>Totalt fra PDF-ene</td><td>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pk</td><td></td></tr></tfoot>
             </table>
           </div>
         </div>
@@ -270,14 +255,12 @@ function ConfirmationView({ confirmation, originalLines }: { confirmation: Confi
           <strong>{confirmation.orderNumber ? `Moelven-ordre ${confirmation.orderNumber}` : `Ordrebekreftelse ${confirmation.version}`}</strong>
           <span>{confirmation.fileName} · {fileSize(confirmation.fileSize)} · lastet opp av {confirmation.uploadedBy}</span>
         </div>
-        <span className="confirmationSummaryAmount">{money(confirmation.totalNet)}</span>
       </summary>
 
       <div className="confirmationMeta">
         <span><b>Moelven-ordre:</b> {confirmation.orderNumber || "–"}</span>
         <span><b>Ordredato:</b> {confirmation.orderDate || "–"}</span>
         <span><b>Leveringsdato:</b> {confirmation.deliveryDate || "–"}</span>
-        <span><b>Netto:</b> {money(confirmation.totalNet)}</span>
         <a className="secondaryLink" href={`/api/order-confirmations/file?pathname=${encodeURIComponent(confirmation.pathname)}`} target="_blank" rel="noreferrer">Åpne PDF</a>
       </div>
 
@@ -305,7 +288,7 @@ function ConfirmationView({ confirmation, originalLines }: { confirmation: Confi
       <div className="confirmationTableWrap">
         <table className="confirmationTable productConfirmationTable">
           <thead>
-            <tr><th>Pos.</th><th>Vare</th><th>Pakker</th><th>Antall</th><th>Netto</th></tr>
+            <tr><th>Pos.</th><th>Vare</th><th>Pakker</th><th>Antall</th></tr>
           </thead>
           <tbody>
             {confirmation.lines.map((line) => (
@@ -320,7 +303,6 @@ function ConfirmationView({ confirmation, originalLines }: { confirmation: Confi
                 </td>
                 <td className="numericCell"><strong>{line.packages}</strong><span>pk</span></td>
                 <td className="numericCell"><strong>{line.quantity.toLocaleString("nb-NO")}</strong><span>{line.quantityUnit}</span></td>
-                <td className="moneyCell">{money(line.netAmount)}</td>
               </tr>
             ))}
           </tbody>

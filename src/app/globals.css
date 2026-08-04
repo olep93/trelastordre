@@ -1512,7 +1512,6 @@ textarea{
 .combinedConfirmationTable { min-width: 0; table-layout: fixed; font-size: .78rem; }
 .combinedConfirmationTable th:nth-child(2) { width: 72px; text-align: right; }
 .combinedConfirmationTable th:nth-child(3) { width: 92px; text-align: right; }
-.combinedConfirmationTable th:nth-child(4) { width: 116px; text-align: right; }
 .combinedConfirmationTable th,
 .combinedConfirmationTable td { padding: 6px 8px; vertical-align: middle; }
 .combinedConfirmationTable .confirmationProductCell strong { font-size: .82rem; line-height: 1.15; }
@@ -1522,8 +1521,7 @@ textarea{
 .combinedNumber span { color: #69778a; font-size: .68rem; }
 .combinedConfirmationTable tbody tr:nth-child(even) { background: #f7f9fc; }
 .combinedConfirmationTable tfoot td { border-top: 2px solid #cbd6e2; border-bottom: 0; background: #edf2f7; color: #17386e; font-weight: 800; }
-.combinedConfirmationTable tfoot td:nth-child(2),
-.combinedConfirmationTable tfoot td:last-child { text-align: right; white-space: nowrap; }
+.combinedConfirmationTable tfoot td:nth-child(2) { text-align: right; white-space: nowrap; }
 
 /* Enterprise 7.3 – lesbart ordrearkiv */
 .archiveToolbar {
@@ -1670,12 +1668,10 @@ textarea{
   .combinedConfirmationHeader { align-items: flex-start; }
   .combinedConfirmationTable th:nth-child(2) { width: 48px; }
   .combinedConfirmationTable th:nth-child(3) { width: 66px; }
-  .combinedConfirmationTable th:nth-child(4) { width: 78px; }
   .combinedConfirmationTable th,
   .combinedConfirmationTable td { padding: 5px 4px; font-size: .68rem; }
   .combinedConfirmationTable .confirmationProductCell strong { font-size: .72rem; }
   .combinedProductMeta { font-size: .6rem; }
-  .combinedConfirmationTable .moneyCell { font-size: .66rem; }
 }
 
 /* Enterprise 7.2.3 – ryddigere Moelven-varelinjer */
@@ -1687,7 +1683,6 @@ textarea{
 .productConfirmationTable th:nth-child(1) { width: 58px; }
 .productConfirmationTable th:nth-child(3) { width: 82px; text-align: center; }
 .productConfirmationTable th:nth-child(4) { width: 105px; text-align: center; }
-.productConfirmationTable th:nth-child(5) { width: 130px; text-align: right; }
 .productConfirmationTable tbody tr:nth-child(even) { background: #f8fafc; }
 .productConfirmationTable tbody tr:hover { background: #eef5ff; }
 .productConfirmationTable td { vertical-align: middle; padding-top: 7px; padding-bottom: 7px; }
@@ -1718,7 +1713,6 @@ textarea{
 .numericCell { text-align: center !important; }
 .numericCell strong { display: block; color: #102b55; font-size: 1rem; }
 .numericCell span { display: block; margin-top: 2px; color: #6b7788; font-size: 0.75rem; }
-.moneyCell { text-align: right !important; font-weight: 700; white-space: nowrap; }
 
 @media (max-width: 720px) {
   .confirmationTableWrap:has(.productConfirmationTable) {
@@ -1752,8 +1746,7 @@ textarea{
   }
   .confirmationProductCell { padding-right: 44px !important; }
   .confirmationProductMeta { margin-bottom: 11px; }
-  .productConfirmationTable .numericCell,
-  .productConfirmationTable .moneyCell {
+  .productConfirmationTable .numericCell {
     display: inline-flex;
     align-items: baseline;
     gap: 4px;
@@ -1765,11 +1758,4 @@ textarea{
   .productConfirmationTable .numericCell::before { color: #657286; font-size: 0.75rem; font-weight: 600; }
   .productConfirmationTable .numericCell:nth-of-type(3)::before { content: "Pakker: "; }
   .productConfirmationTable .numericCell:nth-of-type(4)::before { content: "Antall: "; }
-  .productConfirmationTable .moneyCell {
-    display: block;
-    margin-top: 9px;
-    padding-top: 9px;
-    border-top: 1px solid #edf0f4;
-  }
-  .productConfirmationTable .moneyCell::before { content: "Netto: "; color: #657286; font-size: 0.75rem; font-weight: 600; }
 }
