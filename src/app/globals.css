@@ -17,6 +17,369 @@
   --line:#d6deea;
   --shadow:0 14px 40px rgba(0,47,95,.12);
 }
+
+/* Enterprise 8.0 - Obs BYGG professional workspace */
+:root {
+  --obs-blue: #003b70;
+  --obs-blue-2: #00549a;
+  --obs-navy: #062b4f;
+  --obs-orange: #f58220;
+  --obs-orange-2: #ff9b42;
+  --bg: #edf1f5;
+  --surface-2: #f5f7fa;
+  --text: #152536;
+  --muted: #647386;
+  --line: #d5dde7;
+  --shadow: 0 8px 24px rgba(12, 43, 74, .08);
+}
+
+body {
+  background: #edf1f5;
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  content: "";
+  display: block;
+  position: fixed;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--obs-orange);
+  z-index: 100;
+}
+
+button { border-radius: 7px; }
+.primary {
+  background: var(--obs-orange);
+  border: 1px solid #df7014;
+  box-shadow: none;
+}
+.primary:hover { background: #e87515; }
+.secondary {
+  background: #fff;
+  border-color: #b9c7d6;
+}
+
+.appHeader {
+  top: 4px;
+  background: var(--obs-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 5px 18px rgba(6, 43, 79, .18);
+}
+.headerInner { min-height: 78px; padding: 10px 20px; }
+.brandLockup { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+.logo {
+  width: 82px;
+  height: 52px;
+  padding: 2px 7px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 6px;
+  background: #fff;
+}
+.headerText { flex: initial; }
+.headerText span {
+  display: block;
+  margin-bottom: 2px;
+  color: #b9d0e4;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+.headerText h1 { font-size: 25px; letter-spacing: -.35px; }
+.headerContext { display: flex; align-items: center; gap: 9px; color: #d7e4ef; font-size: 12px; font-weight: 800; }
+.headerContext > span:first-child { padding-right: 9px; border-right: 1px solid rgba(255,255,255,.18); }
+.syncBadge { display: inline-flex; align-items: center; gap: 6px; }
+.syncBadge i { width: 7px; height: 7px; border-radius: 50%; background: #55c77a; box-shadow: 0 0 0 3px rgba(85,199,122,.14); }
+.syncBadge.saving i { background: var(--obs-orange); }
+.appHeader .dangerSoft {
+  min-height: 36px;
+  padding: 8px 11px;
+  background: transparent;
+  border-color: rgba(255,255,255,.25);
+  color: #fff;
+  font-size: 12px;
+}
+
+.app { max-width: 1360px; padding: 18px 22px 28px; }
+.presenceBar {
+  min-height: 68px;
+  margin-bottom: 12px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  border: 1px solid #d2dce7;
+  border-left: 4px solid var(--obs-orange);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(12,43,74,.04);
+}
+.presenceBar strong { display: inline; font-size: 16px; }
+.presenceBar > div:first-child > span:last-child { display: inline; margin-left: 8px; font-size: 12px; font-weight: 600; }
+.presenceLabel {
+  display: block !important;
+  margin: 0 0 2px !important;
+  color: var(--obs-orange) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.presenceUsers span { padding: 5px 8px; border-radius: 5px; box-shadow: none; font-size: 11px; }
+.presenceUsers span.online { background: #edf8f1; border-color: #b9dfc4; }
+
+.appTabs {
+  position: sticky;
+  top: 94px;
+  z-index: 18;
+  gap: 0;
+  padding: 0;
+  margin-bottom: 16px;
+  border-radius: 9px;
+  border: 1px solid #ccd7e3;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(12,43,74,.06);
+}
+.appTabs button {
+  min-height: 50px;
+  border-radius: 0;
+  border-right: 1px solid #dde4ec;
+  background: #fff;
+  color: #506176;
+  font-size: 13px;
+  letter-spacing: .01em;
+}
+.appTabs button:last-child { border-right: 0; }
+.appTabs button > span { margin-right: 8px; color: #98a5b4; font-size: 10px; }
+.appTabs button.active {
+  background: var(--obs-blue);
+  color: #fff;
+  box-shadow: inset 0 -4px 0 var(--obs-orange);
+}
+.appTabs button.active > span { color: #f9b779; }
+.appTabs button.active::after { display: none; }
+
+.dashboard {
+  margin-bottom: 14px;
+  padding: 22px;
+  border-radius: 11px;
+  background: var(--obs-blue);
+  box-shadow: 0 8px 24px rgba(0,59,112,.16);
+}
+.dashboard::before {
+  inset: 0 0 auto auto;
+  width: 34%;
+  height: 100%;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,.055));
+}
+.dashboardHeader { margin-bottom: 17px; }
+.dashboard h2 { margin: 7px 0 3px; font-size: 35px; }
+.dashboard p { font-size: 13px; font-weight: 600; }
+.eyebrow { padding: 4px 7px; border-radius: 4px; font-size: 9px; letter-spacing: .11em; }
+.visualTruckCard {
+  border: 1px solid #d8e1ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 13px rgba(0,26,52,.14);
+}
+.visualTruckCard:hover { transform: none; box-shadow: 0 5px 16px rgba(0,26,52,.18); }
+.visualTruckCard.active { border-color: var(--obs-orange); box-shadow: inset 4px 0 0 var(--obs-orange), 0 5px 16px rgba(0,26,52,.16); }
+.truckIcon, .miniTarget, .progressTrack { border-radius: 5px; }
+.truckIcon { box-shadow: none; }
+.miniTarget { background: #f2f5f8; }
+.truckCardTop strong { font-size: 18px; }
+
+.heroPanel,
+.exportPanel,
+.activityPanel,
+.archivePanel,
+.statsPanel {
+  border: 1px solid #d1dae5;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+}
+.heroPanel { padding: 13px; }
+.counterGrid { gap: 8px; }
+.counterCard, .moduleCard {
+  min-height: 102px;
+  padding: 13px;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+.counterCard strong, .moduleCard strong { margin: 7px 0 5px; font-size: 29px; letter-spacing: -.7px; }
+.label { font-size: 10px; letter-spacing: .08em; }
+
+.toolBar { margin: 12px 0; }
+.searchWrap {
+  border-radius: 7px;
+  border-color: #cbd6e2;
+  box-shadow: 0 2px 7px rgba(12,43,74,.04);
+}
+.searchWrap input { padding: 12px 0; font-size: 14px; }
+.category {
+  margin-bottom: 10px;
+  border-radius: 9px;
+  border-color: #d0dae5;
+  box-shadow: 0 4px 14px rgba(12,43,74,.055);
+}
+.categoryHeader {
+  min-height: 68px;
+  padding: 10px 13px;
+  border-radius: 9px 9px 0 0;
+  background: #fff;
+}
+.categoryHeader:hover { background: #f7f9fc; }
+.categoryImage { width: 54px; height: 42px; border-radius: 5px; box-shadow: none; }
+.categoryHeader h2 { font-size: 17px; }
+.categoryBody, .productListOnly { gap: 7px; padding: 8px; }
+.productRow {
+  min-height: 62px;
+  padding: 10px 11px;
+  border-radius: 6px;
+  box-shadow: none;
+  background: #fff;
+}
+.productRow:hover { background: #f7f9fc; }
+.productRow.hasQty { border-color: var(--obs-orange); background: #fff9f3; box-shadow: inset 3px 0 0 var(--obs-orange); }
+.productRowMain strong { font-size: 16px; }
+.productRowSide { width: 44px; height: 42px; border-radius: 5px; }
+.productRowSide b { font-size: 18px; }
+
+.archivePanel { overflow: hidden; }
+.archiveHeader {
+  min-height: 116px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #d6e0ea;
+  background: linear-gradient(100deg, var(--obs-navy), var(--obs-blue));
+  color: #fff;
+}
+.archiveHeader h2 { margin-top: 4px; color: #fff; font-size: 30px; letter-spacing: -.6px; }
+.archiveHeader p { margin-bottom: 0; color: #c8daea; font-size: 12px; font-weight: 600; }
+.sectionKicker { display: block; color: #f6a45e !important; font-size: 9px !important; font-weight: 900 !important; letter-spacing: .13em; text-transform: uppercase; }
+.archiveToggle { display: inline-flex !important; align-items: center; gap: 9px; color: #fff !important; font-size: 11px !important; }
+.archiveToggle b { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(255,255,255,.35); border-radius: 5px; font-size: 18px; }
+.archiveList { gap: 9px; padding: 13px; background: #f2f5f8; }
+.archiveToolbar {
+  align-items: center;
+  margin: 0 0 3px;
+  padding: 8px;
+  border: 1px solid #d5dee8;
+  border-radius: 7px;
+  background: #fff;
+}
+.archiveToolbar label { gap: 4px; }
+.archiveToolbar input { min-height: 40px; border-radius: 5px; background: #f8fafc; font-size: 13px; }
+.archiveResultCount { padding: 0 8px; }
+.archiveItem {
+  border-radius: 7px;
+  border-color: #cbd6e1;
+  background: #fff;
+  box-shadow: 0 2px 7px rgba(12,43,74,.045);
+}
+.archiveItem[open] { border-color: #aebdcd; box-shadow: 0 7px 20px rgba(12,43,74,.09); }
+.archiveItem > summary { min-height: 86px; padding: 12px 14px; gap: 14px; }
+.archiveItem > summary:hover { background: #f8fafc; }
+.archiveOrderIdentity .archiveOrderNumber {
+  margin-bottom: 6px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--obs-orange);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.archiveOrderIdentity > strong { font-size: 14px !important; }
+.archiveOrderIdentity > span:last-child { margin-top: 3px !important; font-weight: 600 !important; }
+.archiveOrderFacts { gap: 5px; }
+.archiveOrderFacts > span {
+  min-height: 48px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: #f4f7fa;
+}
+.archiveOrderFacts strong { font-size: 13px !important; }
+.originalOrderSection, .confirmationSection {
+  margin: 10px 12px 0;
+  padding: 12px;
+  border-radius: 6px;
+  border-color: #d5dee8;
+  background: #f7f9fb;
+}
+.sectionTitleRow { margin-bottom: 8px; }
+.sectionTitleRow h3, .confirmationSection h3 { font-size: 15px; }
+.sectionTitleRow > span, .categoryPill { border-radius: 4px; }
+.confirmationTableWrap { border-radius: 4px; }
+.confirmationTable { font-size: 12px; }
+.confirmationTable th {
+  padding: 6px 8px;
+  background: #e8edf3;
+  color: #324a64;
+  font-size: 10px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.confirmationTable td { padding: 6px 8px; }
+.archiveProductCell strong, .confirmationProductCell strong { font-size: 12px; }
+.archiveProductCell span, .confirmationProductMeta { margin-top: 2px; font-size: 10px; }
+.confirmationHeader { padding-bottom: 9px; border-bottom: 1px solid #dae2eb; }
+.uploadButton, .secondaryLink { min-height: 36px; border-radius: 5px; font-size: 12px; }
+.confirmationCount, .combinedConfirmation, .confirmationCard { border-radius: 5px; }
+.confirmationCard > summary { padding: 10px 12px; }
+.archiveActions {
+  justify-content: flex-end;
+  margin: 10px 12px 12px;
+  padding: 10px 0 0;
+  border-top: 1px solid #dde4ec;
+}
+.archiveActions button { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+
+.statsGrid article { border-radius: 7px; box-shadow: none; background: #f8fafc; }
+.mobileDock { border-radius: 8px; background: var(--obs-navy); }
+.mobileDock button { border-radius: 5px; }
+
+@media (max-width: 720px) {
+  body::before { height: 3px; }
+  .appHeader { top: 3px; }
+  .headerInner { min-height: 64px; padding: 7px 10px; }
+  .brandLockup { gap: 9px; }
+  .logo { width: 63px; height: 42px; padding: 2px 5px; }
+  .headerText span { font-size: 8px; }
+  .headerText h1 { font-size: 18px; }
+  .headerContext > span:first-child { display: none; }
+  .syncBadge { font-size: 0; }
+  .syncBadge i { width: 8px; height: 8px; }
+  .app { padding: 9px 8px 24px; }
+  .presenceBar { min-height: 56px; padding: 8px 10px; }
+  .presenceBar > div:first-child > span:last-child { display: block; margin: 2px 0 0; }
+  .presenceUsers { margin-top: 7px; }
+  .appTabs { top: 71px; margin-bottom: 10px; }
+  .appTabs button { min-height: 44px; padding: 8px 3px; font-size: 11px; }
+  .appTabs button > span { display: none; }
+  .dashboard { padding: 14px; border-radius: 8px; }
+  .dashboard h2 { font-size: 28px; }
+  .visualTruckCard, .heroPanel, .category, .exportPanel, .archivePanel, .statsPanel { border-radius: 7px; }
+  .counterCard, .moduleCard { border-radius: 5px; }
+  .toolBar { top: 116px; background: #edf1f5; backdrop-filter: none; }
+  .stickyCategoryHeader { top: auto; border-radius: 6px 6px 0 0; }
+  .categoryHeader { min-height: 60px; padding: 8px 9px; }
+  .categoryImage { width: 48px; height: 38px; }
+  .productRow { min-height: 58px; border-radius: 5px; }
+  .productRowMain strong { font-size: 17px; }
+  .archiveHeader { min-height: 100px; padding: 17px 14px; }
+  .archiveHeader h2 { font-size: 26px; }
+  .archiveToggle { font-size: 0 !important; }
+  .archiveToggle b { width: 30px; height: 30px; font-size: 18px; }
+  .archiveList { padding: 7px; }
+  .archiveToolbar { padding: 7px; }
+  .archiveItem > summary { gap: 9px; }
+  .archiveOrderFacts > span { min-height: 43px; padding: 4px 2px; font-size: 10px !important; }
+  .originalOrderSection, .confirmationSection { margin: 7px 7px 0; padding: 8px; }
+  .sectionTitleRow > span { display: none; }
+  .archiveActions { margin: 8px 7px 10px; }
+  .archiveActions button { flex: 1; }
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{
@@ -1758,4 +2121,64 @@ textarea{
   .productConfirmationTable .numericCell::before { color: #657286; font-size: 0.75rem; font-weight: 600; }
   .productConfirmationTable .numericCell:nth-of-type(3)::before { content: "Pakker: "; }
   .productConfirmationTable .numericCell:nth-of-type(4)::before { content: "Antall: "; }
+}
+
+/* Enterprise 8.0 cascade lock - intentionally last */
+body { background: #edf1f5; }
+button { border-radius: 7px; }
+.primary { background: #f58220; border: 1px solid #df7014; border-radius: 7px; box-shadow: none; }
+.secondary { background: #fff; border-color: #b9c7d6; border-radius: 7px; }
+.appHeader { top: 4px; background: #062b4f; box-shadow: 0 5px 18px rgba(6,43,79,.18); }
+.headerInner { max-width: 1360px; min-height: 78px; padding: 10px 20px; }
+.logo { width: 82px; height: 52px; padding: 2px 7px; border-radius: 6px; background: #fff; }
+.app { max-width: 1360px; padding: 18px 22px 28px; }
+.presenceBar { border-radius: 9px; border-left: 4px solid #f58220; background: #fff; box-shadow: 0 2px 8px rgba(12,43,74,.04); }
+.appTabs { top: 94px; gap: 0; padding: 0; border-radius: 9px; background: #fff; overflow: hidden; box-shadow: 0 3px 12px rgba(12,43,74,.06); }
+.appTabs button { min-height: 50px; border-radius: 0; border-right: 1px solid #dde4ec; background: #fff; color: #506176; font-size: 13px; }
+.appTabs button.active { background: #003b70; color: #fff; box-shadow: inset 0 -4px 0 #f58220; }
+.dashboard { padding: 22px; border-radius: 11px; background: #003b70; box-shadow: 0 8px 24px rgba(0,59,112,.16); }
+.dashboard h2 { font-size: 35px; }
+.visualTruckCard { border-radius: 8px; background: #fff; box-shadow: 0 4px 13px rgba(0,26,52,.14); }
+.visualTruckCard:hover { transform: none; box-shadow: 0 5px 16px rgba(0,26,52,.18); }
+.visualTruckCard.active { box-shadow: inset 4px 0 0 #f58220, 0 5px 16px rgba(0,26,52,.16); }
+.truckIcon, .miniTarget, .progressTrack { border-radius: 5px; }
+.heroPanel, .exportPanel, .activityPanel, .archivePanel, .statsPanel { border-radius: 10px; background: #fff; box-shadow: 0 8px 24px rgba(12,43,74,.08); }
+.counterCard, .moduleCard { border-radius: 7px; background: #f8fafc; }
+.searchWrap { border-radius: 7px; }
+.category { border-radius: 9px; box-shadow: 0 4px 14px rgba(12,43,74,.055); }
+.categoryHeader { border-radius: 9px 9px 0 0; background: #fff; }
+.categoryImage { border-radius: 5px; box-shadow: none; }
+.productRow { border-radius: 6px; box-shadow: none; background: #fff; }
+.productRow:hover { transform: none; background: #f7f9fc; }
+.productRow.hasQty { background: #fff9f3; box-shadow: inset 3px 0 0 #f58220; }
+.productRowSide { border-radius: 5px; }
+.archivePanel { border-radius: 10px; }
+.archiveHeader { min-height: 116px; padding: 22px 24px; background: linear-gradient(100deg,#062b4f,#003b70); }
+.archiveHeader h2 { color: #fff; font-size: 30px; }
+.archiveHeader p { color: #c8daea; }
+.archiveList { background: #f2f5f8; }
+.archiveToolbar, .archiveItem { border-radius: 7px; background: #fff; }
+.archiveItem { box-shadow: 0 2px 7px rgba(12,43,74,.045); }
+.archiveOrderIdentity .archiveOrderNumber { border-radius: 4px; background: #f58220; }
+.archiveOrderFacts > span { border-radius: 5px; background: #f4f7fa; }
+.originalOrderSection, .confirmationSection { border-radius: 6px; background: #f7f9fb; }
+.confirmationTableWrap, .confirmationCount, .combinedConfirmation, .confirmationCard { border-radius: 5px; }
+.confirmationTable th { background: #e8edf3; }
+.uploadButton, .secondaryLink { border-radius: 5px; }
+.statsGrid article { border-radius: 7px; background: #f8fafc; box-shadow: none; }
+.mobileDock { border-radius: 8px; background: #062b4f; }
+.mobileDock button { border-radius: 5px; }
+
+@media (max-width: 720px) {
+  .appHeader { top: 3px; }
+  .headerInner { min-height: 64px; padding: 7px 10px; }
+  .logo { width: 63px; height: 42px; border-radius: 5px; }
+  .app { padding: 9px 8px 24px; }
+  .appTabs { top: 71px; }
+  .appTabs button { min-height: 44px; }
+  .dashboard, .visualTruckCard, .heroPanel, .category, .exportPanel, .archivePanel, .statsPanel { border-radius: 7px; }
+  .toolBar { top: 116px; background: #edf1f5; backdrop-filter: none; }
+  .stickyCategoryHeader { top: auto; border-radius: 6px 6px 0 0; }
+  .archiveHeader { min-height: 100px; padding: 17px 14px; }
+  .archiveList { padding: 7px; }
 }

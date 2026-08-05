@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trelastordre Enterprise",
-  description: "Live trelastbestilling til Wood",
+  title: "Obs BYGG Lagerordre",
+  description: "Profesjonell bestilling og oppfølging av trelastordre",
   manifest: "/manifest.json",
 };
 

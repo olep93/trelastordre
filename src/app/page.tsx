@@ -422,7 +422,7 @@ export default function Page() {
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
   const [archiveSearch, setArchiveSearch] = useState("");
   const [view, setView] = useState<"order" | "archive" | "stats">("order");
-  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(true);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [presence, setPresence] = useState<PresenceUser[]>([]);
 
@@ -895,10 +895,16 @@ export default function Page() {
     <>
       <header className="appHeader">
         <div className="headerInner">
-          <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
-          <div className="headerText">
-            <h1>Obs Bygg Lagerordre</h1>
-            <p>Enterprise 6.1 · Uke {order.week} · {saving ? "Synker..." : "Synket"}</p>
+          <div className="brandLockup">
+            <Image className="logo" src="/obs-bygg-logo.png" alt="Obs BYGG" width={92} height={58} priority />
+            <div className="headerText">
+              <span>Trelast og logistikk</span>
+              <h1>Lagerordre</h1>
+            </div>
+          </div>
+          <div className="headerContext">
+            <span>Uke {order.week}</span>
+            <span className={`syncBadge ${saving ? "saving" : ""}`}><i />{saving ? "Lagrer" : "Synkronisert"}</span>
           </div>
           <button className="iconButton dangerSoft" onClick={resetOrder}>Nullstill</button>
         </div>
@@ -907,8 +913,9 @@ export default function Page() {
       <main className="app">
         <section className="presenceBar">
           <div>
-            <strong>Hei, {userName} 👋</strong>
-            <span>Hurtig lengdepanelet · samlet lagring · sist endret av {order.lastEditedBy || "ingen ennå"}</span>
+            <span className="presenceLabel">Arbeidsflate</span>
+            <strong>Hei, {userName}</strong>
+            <span>Sist endret av {order.lastEditedBy || "ingen ennå"}</span>
           </div>
           <div className="presenceUsers">
             {presence.slice(0, 6).map((user) => {
@@ -920,9 +927,9 @@ export default function Page() {
         </section>
 
         <nav className="appTabs">
-          <button className={view === "order" ? "active" : ""} onClick={() => setView("order")}>Aktiv ordre</button>
-          <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}>Arkiv</button>
-          <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}>Statistikk</button>
+          <button className={view === "order" ? "active" : ""} onClick={() => setView("order")}><span>01</span>Aktiv ordre</button>
+          <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}><span>02</span>Arkiv</button>
+          <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}><span>03</span>Statistikk</button>
         </nav>
 
         {view === "order" && (
@@ -1101,10 +1108,11 @@ export default function Page() {
         <section className="archivePanel openArchive" id="archive">
           <button className="archiveHeader" onClick={() => setArchiveOpen((v) => !v)}>
             <div>
+              <span className="sectionKicker">Ordrehistorikk</span>
               <h2>Arkiv</h2>
-              <p>{sentOrders.length ? `${sentOrders.length} siste arkiverte` : "Arkivet er tomt"}</p>
+              <p>{sentOrders.length ? `${sentOrders.length} arkiverte lagerordrer · komplett dokumentflyt` : "Arkivet er tomt"}</p>
             </div>
-            <span>{archiveOpen ? "Lukk" : "Åpne"}</span>
+            <span className="archiveToggle">{archiveOpen ? "Skjul innhold" : "Vis innhold"} <b>{archiveOpen ? "−" : "+"}</b></span>
           </button>
 
           {archiveOpen && (
