@@ -13,6 +13,10 @@ type OrderPdfInput = {
   orderedBy: string;
   orderedAt: number;
   lines: OrderPdfLine[];
+  confirmation?: {
+    count: number;
+    orderNumbers: string[];
+  };
 };
 
 function safeFileName(value: string) {
@@ -36,13 +40,14 @@ export async function generateOrderPdf(input: OrderPdfInput) {
   const pageSize: [number, number] = [595.28, 841.89];
   const margin = 42;
   const rowHeight = 31;
+  const confirmed = Boolean(input.confirmation?.count);
   let page = document.addPage(pageSize);
   let y = 790;
 
   const addHeader = () => {
     page.drawRectangle({ x: 0, y: 768, width: pageSize[0], height: 74, color: rgb(0.02, 0.18, 0.36) });
     page.drawText(`Lagerordre ${input.lagerOrderNumber || "-"}`, { x: margin, y: 803, size: 20, font: bold, color: rgb(1, 1, 1) });
-    page.drawText("Vareoversikt", { x: margin, y: 782, size: 10, font: regular, color: rgb(0.86, 0.91, 0.97) });
+    page.drawText(confirmed ? "Bekreftet vareoversikt" : "Vareoversikt", { x: margin, y: 782, size: 10, font: regular, color: rgb(0.86, 0.91, 0.97) });
     y = 744;
   };
 
@@ -58,6 +63,17 @@ export async function generateOrderPdf(input: OrderPdfInput) {
   page.drawText(`Bestilt av: ${input.orderedBy || "Ukjent"}`, { x: 205, y, size: 10, font: regular, color: rgb(0.25, 0.32, 0.42) });
   page.drawText(`Dato: ${new Date(input.orderedAt).toLocaleDateString("nb-NO")}`, { x: 430, y, size: 10, font: regular, color: rgb(0.25, 0.32, 0.42) });
   y -= 28;
+
+  const statusColor = confirmed ? rgb(0.09, 0.51, 0.26) : rgb(0.72, 0.4, 0.04);
+  const statusBackground = confirmed ? rgb(0.91, 0.97, 0.93) : rgb(1, 0.96, 0.88);
+  const orderNumbers = input.confirmation?.orderNumbers.join(", ");
+  const statusDetail = confirmed
+    ? `${input.confirmation?.count} ${input.confirmation?.count === 1 ? "ordrebekreftelse" : "ordrebekreftelser"}${orderNumbers ? ` - Moelven ordre ${orderNumbers}` : ""}`
+    : "Ingen ordrebekreftelse er registrert på lagerordren";
+  page.drawRectangle({ x: margin, y: y - 26, width: pageSize[0] - margin * 2, height: 32, color: statusBackground, borderColor: statusColor, borderWidth: 0.7 });
+  page.drawText(confirmed ? "BEKREFTET AV MOELVEN" : "AVVENTER ORDREBEKREFTELSE", { x: margin + 9, y: y - 8, size: 8.5, font: bold, color: statusColor });
+  page.drawText(statusDetail.slice(0, 92), { x: margin + 9, y: y - 20, size: 7.5, font: regular, color: statusColor });
+  y -= 40;
   addTableHeader();
 
   input.lines.forEach((line, index) => {
@@ -82,5 +98,5 @@ export async function generateOrderPdf(input: OrderPdfInput) {
   page.drawText("Generert fra Trelastordre", { x: margin, y: 32, size: 7.5, font: regular, color: rgb(0.45, 0.5, 0.57) });
 
   const bytes = await document.save();
-  download(bytes, safeFileName(`Lagerordre-${input.lagerOrderNumber || "ukjent"}-uke-${input.week}.pdf`));
+  download(bytes, safeFileName(`Lagerordre-${input.lagerOrderNumber || "ukjent"}-${confirmed ? "bekreftet" : "bestilt"}-uke-${input.week}.pdf`));
 }

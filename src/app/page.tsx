@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   addDoc,
   collection,
@@ -17,7 +17,7 @@ import {
 import { categories, lengthsFor, buildMailName, type Category, type Material } from "@/data/products";
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
-import { OrderConfirmationPanel, type ArchivedOrderLine } from "@/components/OrderConfirmationPanel";
+import { OrderConfirmationPanel, type ArchivedOrderLine, type ConfirmationStatus } from "@/components/OrderConfirmationPanel";
 import type { OrderPdfLine } from "@/lib/order-pdf";
 
 const RECIPIENT = "post.wood@moelven.no";
@@ -420,6 +420,7 @@ export default function Page() {
   const pendingQtyRef = useRef<Record<string, { category: string; product: string; length: string; delta: number; truckIndex: number }>>({});
   const flushTimerRef = useRef<number | null>(null);
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
+  const [confirmationStatuses, setConfirmationStatuses] = useState<Record<string, ConfirmationStatus>>({});
   const [archiveSearch, setArchiveSearch] = useState("");
   const [view, setView] = useState<"order" | "archive" | "stats">("order");
   const [archiveOpen, setArchiveOpen] = useState(true);
@@ -550,6 +551,14 @@ export default function Page() {
         .some((value) => String(value ?? "").toLocaleLowerCase("nb-NO").includes(needle)),
     );
   }, [archiveSearch, sentOrders]);
+
+  const updateConfirmationStatus = useCallback((sentOrderId: string, status: ConfirmationStatus) => {
+    setConfirmationStatuses((current) => {
+      const previous = current[sentOrderId];
+      if (previous?.count === status.count && previous.orderNumbers.join("|") === status.orderNumbers.join("|")) return current;
+      return { ...current, [sentOrderId]: status };
+    });
+  }, []);
 
   function showToast(message: string) {
     setToast(message);
@@ -816,6 +825,7 @@ export default function Page() {
       orderedBy: sent.sentBy,
       orderedAt: sent.sentAt,
       lines: pdfLinesForOrder(sent),
+      confirmation: sent.id ? confirmationStatuses[sent.id] : undefined,
     });
   }
 
@@ -1137,7 +1147,10 @@ export default function Page() {
                 <details className="archiveItem" key={sent.id}>
                   <summary>
                     <div className="archiveOrderIdentity">
-                      <span className="archiveOrderNumber">Lagerordre {sent.lagerOrderNumber || "?"}</span>
+                      <div className="archiveStatusLine">
+                        <span className="archiveOrderNumber">Lagerordre {sent.lagerOrderNumber || "?"}</span>
+                        {sent.id && confirmationStatuses[sent.id]?.count > 0 && <span className="moelvenConfirmed">Bekreftet av Moelven</span>}
+                      </div>
                       <strong>{sent.subject}</strong>
                       <span>{formatTime(sent.sentAt)} · arkivert av {sent.sentBy}</span>
                     </div>
@@ -1181,10 +1194,13 @@ export default function Page() {
                       lagerOrderNumber={sent.lagerOrderNumber}
                       uploadedBy={userName}
                       originalLines={sent.originalLines}
+                      onStatusChange={updateConfirmationStatus}
                     />
                   )}
                   <div className="archiveActions">
-                    <button className="primary" onClick={() => createOrderPdf(sent)}>Generer PDF</button>
+                    <button className="primary" onClick={() => createOrderPdf(sent)}>
+                      {sent.id && confirmationStatuses[sent.id]?.count > 0 ? "Generer bekreftet PDF" : "Generer PDF"}
+                    </button>
                     <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
                   </div>
                 </details>

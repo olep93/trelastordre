@@ -39,6 +39,12 @@ type Props = {
   lagerOrderNumber?: number;
   uploadedBy: string;
   originalLines?: ArchivedOrderLine[];
+  onStatusChange?: (sentOrderId: string, status: ConfirmationStatus) => void;
+};
+
+export type ConfirmationStatus = {
+  count: number;
+  orderNumbers: string[];
 };
 
 function productKey(dimension: string, length: string) {
@@ -103,7 +109,7 @@ function combineConfirmationLines(confirmations: ConfirmationRecord[]) {
   );
 }
 
-export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumber, uploadedBy, originalLines = [] }: Props) {
+export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumber, uploadedBy, originalLines = [], onStatusChange }: Props) {
   const [confirmations, setConfirmations] = useState<ConfirmationRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -113,9 +119,14 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
   useEffect(() => {
     const ref = collection(db, "sentOrders", sentOrderId, "confirmations");
     return onSnapshot(query(ref, orderBy("uploadedAt", "desc")), (snapshot) => {
-      setConfirmations(snapshot.docs.map((document) => ({ id: document.id, ...(document.data() as Omit<ConfirmationRecord, "id">) })));
+      const records = snapshot.docs.map((document) => ({ id: document.id, ...(document.data() as Omit<ConfirmationRecord, "id">) }));
+      setConfirmations(records);
+      onStatusChange?.(sentOrderId, {
+        count: records.length,
+        orderNumbers: Array.from(new Set(records.map((record) => record.orderNumber).filter((value): value is string => Boolean(value)))),
+      });
     });
-  }, [sentOrderId]);
+  }, [onStatusChange, sentOrderId]);
 
   async function upload(file?: File) {
     if (!file) return;

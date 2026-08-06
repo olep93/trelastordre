@@ -192,7 +192,9 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .archiveItem > summary::-webkit-details-marker { display: none; }
 .archiveItem > summary:hover { background: var(--surface-soft); }
 .archiveOrderIdentity { min-width: 0; }
+.archiveStatusLine { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
 .archiveOrderIdentity .archiveOrderNumber { width: fit-content; margin: 0 0 5px; padding: 3px 6px; display: block; color: #fff; border-radius: 3px; background: var(--orange); font-size: 8px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.moelvenConfirmed { margin: 0 0 5px !important; padding: 3px 6px; color: #116d36 !important; border: 1px solid #a9d8b8; border-radius: 3px; background: #edf8f1; font-size: 8px !important; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
 .archiveOrderIdentity > strong { display: block; overflow-wrap: anywhere; color: var(--blue-900); font-size: 13px; }
 .archiveOrderIdentity > span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
 .archiveOrderFacts { display: grid; grid-template-columns: repeat(3,minmax(78px,auto)); gap: 4px; }
