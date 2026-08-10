@@ -20,12 +20,6 @@ Tønsberg (SAP 3588) bruker fortsatt legacy-samlingene inntil kontrollert
 migrering er gjennomført. Nye varehus bruker den isolerte
 `stores/{storeId}`-strukturen.
 
-Første plattformadministrator:
-
-- E-post: `ole.kristiansen@coop.no`
-- Firebase UID: `m4Dn6XRli5cQqVzZ5DdhSu5i4lr1`
-- Standardvarehus: Tønsberg (SAP 3588)
-
 ## Aktivering
 
 1. Aktiver Email/Password i Firebase Authentication.
