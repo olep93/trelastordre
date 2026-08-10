@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminAuth, getAdminDb } from "@/firebase/admin";
+import { pilotStores } from "@/lib/enterprise";
 
 type AdminContext = {
   uid: string;
@@ -70,14 +71,21 @@ export async function POST(request: NextRequest) {
     const email = String(body.email || "").trim().toLowerCase();
     const displayName = String(body.displayName || "").trim();
     const role = body.role === "store_admin" ? "store_admin" : "user";
+    const targetStore = pilotStores.find((store) => store.id === storeId);
     if (!storeId || !displayName || !/^\S+@\S+\.\S+$/.test(email)) {
       return NextResponse.json({ error: "Fyll inn navn, gyldig e-post og varehus." }, { status: 400 });
     }
+    if (!targetStore) return NextResponse.json({ error: "Varehuset er ikke registrert." }, { status: 400 });
     await authorize(request, storeId);
 
     const user = await adminAuth.createUser({ email, displayName, disabled: false });
     createdUid = user.uid;
     const batch = adminDb.batch();
+    batch.set(adminDb.doc(`stores/${storeId}`), {
+      name: targetStore.name,
+      sapNumber: targetStore.sapNumber,
+      active: true,
+    }, { merge: true });
     batch.set(adminDb.doc(`users/${user.uid}`), {
       email,
       displayName,

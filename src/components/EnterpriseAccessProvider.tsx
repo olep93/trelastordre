@@ -13,6 +13,7 @@ import {
 import { auth, db } from "@/firebase/config";
 import {
   legacyStore,
+  pilotStores,
   type EnterpriseStore,
   type EnterpriseUserProfile,
   type StoreRole,
@@ -78,7 +79,9 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
         return;
       }
 
-      const nextStores = await loadStores(nextProfile.storeIds || []);
+      const nextStores = nextProfile.systemRole === "platform_admin"
+        ? pilotStores
+        : await loadStores(nextProfile.storeIds || []);
       setProfile(nextProfile);
       setStores(nextStores);
       const remembered = localStorage.getItem("trelastordre-store-id");

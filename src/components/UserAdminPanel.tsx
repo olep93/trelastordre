@@ -14,11 +14,12 @@ type ManagedUser = {
 };
 
 export function UserAdminPanel() {
-  const { firebaseUser, store } = useEnterpriseAccess();
+  const { firebaseUser, profile, store, stores } = useEnterpriseAccess();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<ManagedUser["role"]>("user");
+  const [targetStoreId, setTargetStoreId] = useState(store.id);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -49,18 +50,20 @@ export function UserAdminPanel() {
   }, [request]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
+  useEffect(() => { setTargetStoreId(store.id); }, [store.id]);
 
   async function createUser(event: React.FormEvent) {
     event.preventDefault();
     setSaving(true);
     setMessage("");
     try {
-      await request("POST", { displayName, email, role, storeId: store.id });
+      await request("POST", { displayName, email, role, storeId: targetStoreId });
       await sendPasswordResetEmail(auth, email.trim().toLowerCase());
       setDisplayName("");
       setEmail("");
       setRole("user");
-      setMessage(`Brukeren er opprettet. Invitasjon er sendt til ${email.trim()}.`);
+      const targetStore = stores.find((item) => item.id === targetStoreId);
+      setMessage(`Brukeren er opprettet for ${targetStore?.name || "varehuset"}. Invitasjon er sendt til ${email.trim()}.`);
       await loadUsers();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Kunne ikke opprette brukeren.");
@@ -88,6 +91,7 @@ export function UserAdminPanel() {
 
       <form className="userCreateForm" onSubmit={createUser}>
         <div><h3>Opprett bruker</h3><p>Brukeren mottar en e-post og velger et sikkert passord selv.</p></div>
+        <label>Varehus<select value={targetStoreId} onChange={(event) => setTargetStoreId(event.target.value)} disabled={profile?.systemRole !== "platform_admin"}>{stores.map((item) => <option key={item.id} value={item.id}>{item.name} · SAP {item.sapNumber}</option>)}</select></label>
         <label>Navn<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Fornavn Etternavn" required /></label>
         <label>Jobb-epost<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="navn@coop.no" required /></label>
         <label>Tilgang<select value={role} onChange={(event) => setRole(event.target.value as ManagedUser["role"])}><option value="user">Bruker</option><option value="store_admin">Varehusadministrator</option></select></label>
