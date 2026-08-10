@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { parseMoelvenText } from "@/lib/moelven-parser";
+import { accessError, requireStoreAccess } from "@/lib/server-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -18,6 +19,13 @@ export async function POST(request: Request) {
     const year = String(formData.get("year") || "ukjent-år");
     const week = String(formData.get("week") || "ukjent-uke");
     const lagerOrderNumber = String(formData.get("lagerOrderNumber") || "ukjent");
+
+    try {
+      await requireStoreAccess(request, storeId);
+    } catch (error) {
+      const response = accessError(error);
+      return NextResponse.json({ error: response.error }, { status: response.status });
+    }
 
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "PDF-fil mangler." }, { status: 400 });

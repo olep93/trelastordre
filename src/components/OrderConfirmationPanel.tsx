@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDoc, collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { db } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import type { MoelvenConfirmationLine } from "@/lib/moelven-parser";
 import { extractPdfText } from "@/lib/pdf-text";
 import { storeCollectionPath } from "@/lib/enterprise";
@@ -148,7 +148,12 @@ export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lager
       form.append("week", String(week));
       form.append("lagerOrderNumber", String(lagerOrderNumber || "ukjent"));
 
-      const response = await fetch("/api/order-confirmations/upload", { method: "POST", body: form });
+      const token = await auth.currentUser?.getIdToken();
+      const response = await fetch("/api/order-confirmations/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token || ""}` },
+        body: form,
+      });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Opplastingen feilet.");
 
@@ -172,6 +177,24 @@ export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lager
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function openPdf(pathname: string) {
+    const target = window.open("", "_blank", "noopener,noreferrer");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const response = await fetch(`/api/order-confirmations/file?pathname=${encodeURIComponent(pathname)}`, {
+        headers: { Authorization: `Bearer ${token || ""}` },
+      });
+      if (!response.ok) throw new Error("Kunne ikke åpne PDF-en.");
+      const url = URL.createObjectURL(await response.blob());
+      if (target) target.location.href = url;
+      else window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (openError) {
+      target?.close();
+      setError(openError instanceof Error ? openError.message : "Kunne ikke åpne PDF-en.");
     }
   }
 
@@ -238,13 +261,14 @@ export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lager
           key={confirmation.id}
           confirmation={confirmation}
           originalLines={originalLines}
+          onOpenPdf={openPdf}
         />
       ))}
     </section>
   );
 }
 
-function ConfirmationView({ confirmation, originalLines }: { confirmation: ConfirmationRecord; originalLines: ArchivedOrderLine[] }) {
+function ConfirmationView({ confirmation, originalLines, onOpenPdf }: { confirmation: ConfirmationRecord; originalLines: ArchivedOrderLine[]; onOpenPdf: (pathname: string) => void }) {
   const comparison = useMemo(() => {
     const original = new Map<string, number>();
     originalLines.forEach((line) => original.set(productKey(line.dimension, line.length), (original.get(productKey(line.dimension, line.length)) || 0) + line.packages));
@@ -275,7 +299,7 @@ function ConfirmationView({ confirmation, originalLines }: { confirmation: Confi
         <span><b>Moelven-ordre:</b> {confirmation.orderNumber || "–"}</span>
         <span><b>Ordredato:</b> {confirmation.orderDate || "–"}</span>
         <span><b>Leveringsdato:</b> {confirmation.deliveryDate || "–"}</span>
-        <a className="secondaryLink" href={`/api/order-confirmations/file?pathname=${encodeURIComponent(confirmation.pathname)}`} target="_blank" rel="noreferrer">Åpne PDF</a>
+        <button className="secondaryLink" type="button" onClick={() => onOpenPdf(confirmation.pathname)}>Åpne PDF</button>
       </div>
 
       {hasOriginal && (

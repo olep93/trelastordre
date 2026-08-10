@@ -68,26 +68,30 @@ service cloud.firestore {
       }
     }
 
-    // Legacy Tønsberg access remains unchanged until the first administrator
-    // is provisioned and the existing data has been migrated and verified.
+    // Legacy Tønsberg collections are retained for backward compatibility,
+    // but all access is now protected by Tønsberg membership.
     match /orders/{orderId} {
-      allow read, write: if true;
+      allow read, write: if isStoreMember("obs-bygg-tonsberg") || isPlatformAdmin();
     }
 
     match /sentOrders/{sentOrderId} {
-      allow read, write: if true;
+      allow read, create, update: if isStoreMember("obs-bygg-tonsberg") || isPlatformAdmin();
+      allow delete: if isStoreAdmin("obs-bygg-tonsberg");
 
       match /confirmations/{confirmationId} {
-        allow read, write: if true;
+        allow read, create, update: if isStoreMember("obs-bygg-tonsberg") || isPlatformAdmin();
+        allow delete: if isStoreAdmin("obs-bygg-tonsberg");
       }
     }
 
     match /changeLogs/{orderId}/entries/{entryId} {
-      allow read, write: if true;
+      allow read, create: if isStoreMember("obs-bygg-tonsberg") || isPlatformAdmin();
+      allow update, delete: if false;
     }
 
     match /presence/{userId} {
-      allow read, write: if true;
+      allow read: if isStoreMember("obs-bygg-tonsberg") || isPlatformAdmin();
+      allow create, update, delete: if signedIn() && request.auth.uid == userId;
     }
 
     match /{document=**} {
