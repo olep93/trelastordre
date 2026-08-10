@@ -82,6 +82,23 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .appTabs button > span { margin-right: 8px; color: #98a6b4; font-size: 9px; }
 .appTabs button.active { color: #fff; background: var(--blue-800); box-shadow: inset 0 -4px 0 var(--orange); }
 .appTabs button.active > span { color: #ffc18c; }
+.storeContextBar { min-height: 54px; margin-bottom: 10px; padding: 8px 11px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fff; box-shadow: var(--shadow-sm); }
+.storeContextBar > div:first-child > span { display: block; color: var(--muted); font-size: 8px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+.storeContextBar strong { margin-right: 7px; color: var(--blue-900); font-size: 14px; }
+.storeContextBar small { color: var(--muted); font-size: 9px; }
+.storeContextActions { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+.storeContextActions select { min-height: 34px; padding: 0 28px 0 9px; color: var(--blue-900); border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface-soft); font-weight: 700; }
+
+.enterpriseLoading { min-height: 100vh; display: grid; place-items: center; color: var(--blue-900); background: var(--canvas); font-weight: 750; }
+.enterpriseLogin { min-height: 100vh; padding: 22px; display: grid; place-items: center; background: var(--blue-950); }
+.enterpriseLoginCard { width: min(430px,100%); padding: 28px; display: grid; border-top: 5px solid var(--orange); border-radius: 7px; background: #fff; box-shadow: 0 28px 80px rgba(0,0,0,.32); }
+.enterpriseLoginCard > span { margin-top: 14px; color: var(--orange); font-size: 9px; font-weight: 850; letter-spacing: .14em; text-transform: uppercase; }
+.enterpriseLoginCard h1 { margin: 4px 0; color: var(--blue-900); font-size: 30px; }
+.enterpriseLoginCard p { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.enterpriseLoginCard label { margin-bottom: 9px; display: grid; gap: 4px; color: var(--blue-900); font-size: 10px; font-weight: 800; }
+.enterpriseLoginCard input { min-height: 42px; padding: 0 11px; color: var(--ink); border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface-soft); font-size: 14px; }
+.enterpriseLoginCard .primary, .enterpriseLoginCard .secondary { width: 100%; }
+.enterpriseLoginMessage { margin-bottom: 9px; padding: 8px; color: var(--blue-900); border: 1px solid #c7d4e0; border-radius: 4px; background: #edf3f8; font-size: 10px; }
 
 .eyebrow { display: inline-flex; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); border-radius: 3px; color: #fff; background: rgba(255,255,255,.1); font-size: 9px; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
 .eyebrow.dark { color: var(--blue-900); border-color: #cdd8e4; background: #edf3f8; }
@@ -323,6 +340,9 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
   .appTabs { top: 68px; margin-bottom: 8px; }
   .appTabs button { min-height: 42px; padding: 7px 3px; font-size: 10px; }
   .appTabs button > span { display: none; }
+  .storeContextBar { align-items: flex-start; }
+  .storeContextActions > span { display: none; }
+  .storeContextActions select { max-width: 160px; }
   .dashboard { padding: 12px; }
   .dashboardHeader { display: block; }
   .dashboardHeader .primary { width: 100%; margin-top: 9px; }

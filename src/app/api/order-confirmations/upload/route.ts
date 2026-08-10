@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get("file");
     const sentOrderId = String(formData.get("sentOrderId") || "ukjent-ordre");
+    const storeId = String(formData.get("storeId") || "ukjent-varehus");
     const year = String(formData.get("year") || "ukjent-år");
     const week = String(formData.get("week") || "ukjent-uke");
     const lagerOrderNumber = String(formData.get("lagerOrderNumber") || "ukjent");
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
 
     const pathname = [
       "order-confirmations",
+      safeSegment(storeId),
       safeSegment(year),
       `uke-${safeSegment(week)}`,
       `lagerordre-${safeSegment(lagerOrderNumber)}`,

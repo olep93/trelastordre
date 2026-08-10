@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { EnterpriseAccessProvider } from "@/components/EnterpriseAccessProvider";
 
 export const metadata: Metadata = {
   title: "Obs BYGG Lagerordre",
@@ -16,7 +17,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="no">
-      <body>{children}</body>
+      <body><EnterpriseAccessProvider>{children}</EnterpriseAccessProvider></body>
     </html>
   );
 }

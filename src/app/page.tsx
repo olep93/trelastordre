@@ -19,6 +19,8 @@ import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
 import { OrderConfirmationPanel, type ArchivedOrderLine, type ConfirmationStatus } from "@/components/OrderConfirmationPanel";
 import type { OrderPdfLine } from "@/lib/order-pdf";
+import { StoreSelector, useEnterpriseAccess } from "@/components/EnterpriseAccessProvider";
+import { storeCollectionPath, storeDocumentPath } from "@/lib/enterprise";
 
 const RECIPIENT = "post.wood@moelven.no";
 const STORE_NAME = "Obs Bygg Tønsberg";
@@ -390,18 +392,21 @@ function relative(timestamp: number) {
   return `${Math.round(minutes / 60)} t siden`;
 }
 
-function orderRef() {
-  return doc(db, "orders", orderIdForCurrentWeek());
+function orderRef(storeId: string) {
+  return doc(db, storeDocumentPath(storeId, "orders", orderIdForCurrentWeek()));
 }
 
-async function ensureOrder() {
-  const fresh = freshOrder();
-  const ref = orderRef();
+async function ensureOrder(storeId: string, storeName: string) {
+  const fresh = { ...freshOrder(), storeName };
+  const ref = orderRef(storeId);
   const snapshot = await getDoc(ref);
   if (!snapshot.exists()) await setDoc(ref, fresh);
 }
 
 export default function Page() {
+  const enterprise = useEnterpriseAccess();
+  const storeId = enterprise.store.id;
+  const storeName = enterprise.store.name;
   const [order, setOrder] = useState<WeeklyOrder>(freshOrder());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -428,6 +433,13 @@ export default function Page() {
   const [presence, setPresence] = useState<PresenceUser[]>([]);
 
   useEffect(() => {
+    if (enterprise.authEnabled) {
+      setUserId(enterprise.firebaseUser?.uid || "");
+      setUserName(enterprise.profile?.displayName || enterprise.firebaseUser?.displayName || enterprise.firebaseUser?.email || "");
+      setUserReady(true);
+      return;
+    }
+
     let id = localStorage.getItem("trelastordre-user-id");
     if (!id) {
       id = randomId("u");
@@ -438,7 +450,7 @@ export default function Page() {
     setUserId(id);
     setUserName(name);
     setUserReady(true);
-  }, []);
+  }, [enterprise.authEnabled, enterprise.firebaseUser, enterprise.profile]);
 
   useEffect(() => {
     let unsubOrder: (() => void) | undefined;
@@ -447,9 +459,10 @@ export default function Page() {
     let unsubPresence: (() => void) | undefined;
 
     async function start() {
-      await ensureOrder();
+      setLoading(true);
+      await ensureOrder(storeId, storeName);
 
-      unsubOrder = onSnapshot(orderRef(), (snap) => {
+      unsubOrder = onSnapshot(orderRef(storeId), (snap) => {
         if (snap.exists()) {
           const remote = snap.data() as WeeklyOrder;
           const pending = Object.values(pendingQtyRef.current || {}).filter((change) => change.delta !== 0);
@@ -465,14 +478,14 @@ export default function Page() {
       });
 
       unsubArchive = onSnapshot(
-        query(collection(db, "sentOrders"), orderBy("sentAt", "desc"), limit(30)),
+        query(collection(db, storeCollectionPath(storeId, "sentOrders")), orderBy("sentAt", "desc"), limit(30)),
         (snap) => setSentOrders(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<SentOrder, "id">) }))),
       );
 
       // StableSync: live activity log disabled for speed.
 
       unsubPresence = onSnapshot(
-        query(collection(db, "presence"), orderBy("lastSeen", "desc"), limit(20)),
+        query(collection(db, storeCollectionPath(storeId, "presence")), orderBy("lastSeen", "desc"), limit(20)),
         (snap) => setPresence(snap.docs.map((d) => d.data() as PresenceUser)),
       );
     }
@@ -485,16 +498,16 @@ export default function Page() {
       unsubLogs?.();
       unsubPresence?.();
     };
-  }, []);
+  }, [storeId, storeName]);
 
   useEffect(() => {
     if (!userId || !userName) return;
 
-    const update = () => setDoc(doc(db, "presence", userId), { id: userId, name: userName, lastSeen: Date.now() }, { merge: true });
+    const update = () => setDoc(doc(db, storeDocumentPath(storeId, "presence", userId)), { id: userId, name: userName, lastSeen: Date.now() }, { merge: true });
     update();
     const interval = window.setInterval(update, 30000);
     return () => window.clearInterval(interval);
-  }, [userId, userName]);
+  }, [storeId, userId, userName]);
 
   const activeTruck = order.trucks[Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1))] || order.trucks[0];
 
@@ -570,7 +583,7 @@ export default function Page() {
     if (!clean) return;
     localStorage.setItem("trelastordre-user-name", clean);
     setUserName(clean);
-    if (userId) setDoc(doc(db, "presence", userId), { id: userId, name: clean, lastSeen: Date.now() }, { merge: true });
+    if (userId) setDoc(doc(db, storeDocumentPath(storeId, "presence", userId)), { id: userId, name: clean, lastSeen: Date.now() }, { merge: true });
   }
 
 
@@ -613,9 +626,9 @@ export default function Page() {
     setSaving(true);
     try {
       await runTransaction(db, async (transaction) => {
-        const ref = orderRef();
+        const ref = orderRef(storeId);
         const snap = await transaction.get(ref);
-        const current = snap.exists() ? (snap.data() as WeeklyOrder) : freshOrder();
+        const current = snap.exists() ? (snap.data() as WeeklyOrder) : { ...freshOrder(), storeName };
         const result = updater(current);
         const now = Date.now();
 
@@ -712,7 +725,7 @@ export default function Page() {
   }
 
   function orderSubject() {
-    return `Lagerordre ${currentLagerOrderNumber()} - Bestilling uke ${order.week} ${STORE_NAME}`;
+    return `Lagerordre ${currentLagerOrderNumber()} - Bestilling uke ${order.week} ${storeName}`;
   }
 
   function openOutlookWeb() {
@@ -742,7 +755,7 @@ export default function Page() {
     const lagerOrderNumber = currentLagerOrderNumber();
     const subject = orderSubject();
 
-    await addDoc(collection(db, "sentOrders"), {
+    await addDoc(collection(db, storeCollectionPath(storeId, "sentOrders")), {
       orderId: order.id,
       year: order.year,
       week: order.week,
@@ -756,7 +769,7 @@ export default function Page() {
       originalLines: structuredOrderLines(order),
     } satisfies Omit<SentOrder, "id">);
 
-    await addDoc(collection(db, "changeLogs", orderIdForCurrentWeek(), "entries"), {
+    await addDoc(collection(db, `${storeCollectionPath(storeId, "changeLogs")}/${orderIdForCurrentWeek()}/entries`), {
       orderId: order.id,
       timestamp: Date.now(),
       userName,
@@ -932,7 +945,7 @@ export default function Page() {
               const online = Date.now() - user.lastSeen < 90000;
               return <span key={user.id} className={online ? "online" : ""}>{online ? "●" : "○"} {user.name}</span>;
             })}
-            <button className="textButton" onClick={() => { localStorage.removeItem("trelastordre-user-name"); setUserName(""); }}>Endre navn</button>
+            {!enterprise.authEnabled && <button className="textButton" onClick={() => { localStorage.removeItem("trelastordre-user-name"); setUserName(""); }}>Endre navn</button>}
           </div>
         </section>
 
@@ -942,6 +955,8 @@ export default function Page() {
           <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}><span>03</span>Statistikk</button>
         </nav>
 
+        <StoreSelector />
+
         {view === "order" && (
           <>
         <section className="dashboard">
@@ -949,7 +964,7 @@ export default function Page() {
             <div>
               <span className="eyebrow">Aktiv liveordre</span>
               <h2>Lagerordre {currentLagerOrderNumber()}</h2>
-              <p>Uke {order.week} · {STORE_NAME} · {total.total} pakker · {total.lines} linjer</p>
+              <p>Uke {order.week} · {storeName} · {total.total} pakker · {total.lines} linjer</p>
             </div>
             <button className="primary" onClick={addTruck}>+ Ny bil</button>
           </div>
@@ -1189,6 +1204,7 @@ export default function Page() {
                   {sent.id && (
                     <OrderConfirmationPanel
                       sentOrderId={sent.id}
+                      storeId={storeId}
                       year={sent.year}
                       week={sent.week}
                       lagerOrderNumber={sent.lagerOrderNumber}

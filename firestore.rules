@@ -2,6 +2,74 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isPlatformAdmin() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.systemRole == "platform_admin";
+    }
+
+    function isStoreMember(storeId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/stores/$(storeId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/stores/$(storeId)/members/$(request.auth.uid)).data.active == true;
+    }
+
+    function isStoreAdmin(storeId) {
+      return isPlatformAdmin()
+        || (isStoreMember(storeId)
+          && get(/databases/$(database)/documents/stores/$(storeId)/members/$(request.auth.uid)).data.role == "store_admin");
+    }
+
+    // Enterprise user directory. Account creation and global roles are server-managed.
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isPlatformAdmin());
+      allow create, delete: if false;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["displayName", "defaultStoreId"]);
+    }
+
+    // New tenant-isolated structure. These rules can be deployed before migration;
+    // the legacy collections below remain available during the controlled rollout.
+    match /stores/{storeId} {
+      allow read: if isStoreMember(storeId) || isPlatformAdmin();
+      allow create, update, delete: if isPlatformAdmin();
+
+      match /members/{userId} {
+        allow read: if isStoreMember(storeId) || isPlatformAdmin();
+        allow create, update, delete: if isStoreAdmin(storeId);
+      }
+
+      match /orders/{orderId} {
+        allow read, write: if isStoreMember(storeId) || isPlatformAdmin();
+      }
+
+      match /sentOrders/{sentOrderId} {
+        allow read, create, update: if isStoreMember(storeId) || isPlatformAdmin();
+        allow delete: if isStoreAdmin(storeId);
+
+        match /confirmations/{confirmationId} {
+          allow read, create, update: if isStoreMember(storeId) || isPlatformAdmin();
+          allow delete: if isStoreAdmin(storeId);
+        }
+      }
+
+      match /changeLogs/{orderId}/entries/{entryId} {
+        allow read, create: if isStoreMember(storeId) || isPlatformAdmin();
+        allow update, delete: if false;
+      }
+
+      match /presence/{userId} {
+        allow read: if isStoreMember(storeId) || isPlatformAdmin();
+        allow create, update, delete: if signedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // Legacy Tønsberg access remains unchanged until the first administrator
+    // is provisioned and the existing data has been migrated and verified.
     match /orders/{orderId} {
       allow read, write: if true;
     }

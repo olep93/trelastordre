@@ -5,6 +5,7 @@ import { addDoc, collection, onSnapshot, orderBy, query } from "firebase/firesto
 import { db } from "@/firebase/config";
 import type { MoelvenConfirmationLine } from "@/lib/moelven-parser";
 import { extractPdfText } from "@/lib/pdf-text";
+import { storeCollectionPath } from "@/lib/enterprise";
 
 export type ArchivedOrderLine = {
   category: string;
@@ -34,6 +35,7 @@ type ConfirmationRecord = {
 
 type Props = {
   sentOrderId: string;
+  storeId: string;
   year: number;
   week: number;
   lagerOrderNumber?: number;
@@ -109,7 +111,7 @@ function combineConfirmationLines(confirmations: ConfirmationRecord[]) {
   );
 }
 
-export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumber, uploadedBy, originalLines = [], onStatusChange }: Props) {
+export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lagerOrderNumber, uploadedBy, originalLines = [], onStatusChange }: Props) {
   const [confirmations, setConfirmations] = useState<ConfirmationRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -117,7 +119,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
   const combinedLines = useMemo(() => combineConfirmationLines(confirmations), [confirmations]);
 
   useEffect(() => {
-    const ref = collection(db, "sentOrders", sentOrderId, "confirmations");
+    const ref = collection(db, `${storeCollectionPath(storeId, "sentOrders")}/${sentOrderId}/confirmations`);
     return onSnapshot(query(ref, orderBy("uploadedAt", "desc")), (snapshot) => {
       const records = snapshot.docs.map((document) => ({ id: document.id, ...(document.data() as Omit<ConfirmationRecord, "id">) }));
       setConfirmations(records);
@@ -126,7 +128,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
         orderNumbers: Array.from(new Set(records.map((record) => record.orderNumber).filter((value): value is string => Boolean(value)))),
       });
     });
-  }, [onStatusChange, sentOrderId]);
+  }, [onStatusChange, sentOrderId, storeId]);
 
   async function upload(file?: File) {
     if (!file) return;
@@ -141,6 +143,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
       form.append("file", file);
       form.append("rawText", rawText);
       form.append("sentOrderId", sentOrderId);
+      form.append("storeId", storeId);
       form.append("year", String(year));
       form.append("week", String(week));
       form.append("lagerOrderNumber", String(lagerOrderNumber || "ukjent"));
@@ -149,7 +152,7 @@ export function OrderConfirmationPanel({ sentOrderId, year, week, lagerOrderNumb
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Opplastingen feilet.");
 
-      await addDoc(collection(db, "sentOrders", sentOrderId, "confirmations"), {
+      await addDoc(collection(db, `${storeCollectionPath(storeId, "sentOrders")}/${sentOrderId}/confirmations`), {
         version: confirmations.length + 1,
         uploadedAt: Date.now(),
         uploadedBy: uploadedBy || "Ukjent bruker",
