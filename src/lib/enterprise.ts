@@ -23,8 +23,17 @@ export type EnterpriseUserProfile = {
 export const legacyStore: EnterpriseStore = {
   id: LEGACY_STORE_ID,
   name: "Obs Bygg Tønsberg",
+  sapNumber: "3588",
   active: true,
 };
+
+export const pilotStores: EnterpriseStore[] = [
+  legacyStore,
+  { id: "3571", name: "Obs Bygg Sandefjord", sapNumber: "3571", active: true },
+  { id: "5087", name: "Obs Bygg Skien", sapNumber: "5087", active: true },
+  { id: "2603", name: "Obs Bygg Mjøndalen", sapNumber: "2603", active: true },
+  { id: "3570", name: "Obs Bygg Kongsberg", sapNumber: "3570", active: true },
+];
 
 export function storeCollectionPath(storeId: string, collectionName: string) {
   return storeId === LEGACY_STORE_ID ? collectionName : `stores/${storeId}/${collectionName}`;

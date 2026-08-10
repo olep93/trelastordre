@@ -16,8 +16,15 @@ Firestore-stier uten å flytte eller sperre dagens Tønsberg-data.
 - `stores/{storeId}/members/{uid}` er autoritativt medlemskap og varehusrolle.
 - Ordre, arkiv, bekreftelser, logger og tilstedeværelse ligger under varehuset.
 
-Tønsberg bruker fortsatt legacy-samlingene inntil kontrollert migrering er
-gjennomført. Nye varehus bruker den isolerte `stores/{storeId}`-strukturen.
+Tønsberg (SAP 3588) bruker fortsatt legacy-samlingene inntil kontrollert
+migrering er gjennomført. Nye varehus bruker den isolerte
+`stores/{storeId}`-strukturen.
+
+Første plattformadministrator:
+
+- E-post: `ole.kristiansen@coop.no`
+- Firebase UID: `m4Dn6XRli5cQqVzZ5DdhSu5i4lr1`
+- Standardvarehus: Tønsberg (SAP 3588)
 
 ## Aktivering
 
@@ -27,4 +34,3 @@ gjennomført. Nye varehus bruker den isolerte `stores/{storeId}`-strukturen.
 4. Verifiser innlogging og varehustilgang i en testdeploy.
 5. Sett `NEXT_PUBLIC_ENTERPRISE_AUTH=true` i Vercel.
 6. Migrer Tønsberg-data og fjern legacy-reglene først etter godkjent kontroll.
-
