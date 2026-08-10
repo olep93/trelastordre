@@ -20,6 +20,7 @@ import { FastProductSheet } from "@/components/FastProductSheet";
 import { OrderConfirmationPanel, type ArchivedOrderLine, type ConfirmationStatus } from "@/components/OrderConfirmationPanel";
 import type { OrderPdfLine } from "@/lib/order-pdf";
 import { StoreSelector, useEnterpriseAccess } from "@/components/EnterpriseAccessProvider";
+import { UserAdminPanel } from "@/components/UserAdminPanel";
 import { storeCollectionPath, storeDocumentPath } from "@/lib/enterprise";
 
 const RECIPIENT = "post.wood@moelven.no";
@@ -427,7 +428,7 @@ export default function Page() {
   const [sentOrders, setSentOrders] = useState<SentOrder[]>([]);
   const [confirmationStatuses, setConfirmationStatuses] = useState<Record<string, ConfirmationStatus>>({});
   const [archiveSearch, setArchiveSearch] = useState("");
-  const [view, setView] = useState<"order" | "archive" | "stats">("order");
+  const [view, setView] = useState<"order" | "archive" | "stats" | "users">("order");
   const [archiveOpen, setArchiveOpen] = useState(true);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [presence, setPresence] = useState<PresenceUser[]>([]);
@@ -953,6 +954,7 @@ export default function Page() {
           <button className={view === "order" ? "active" : ""} onClick={() => setView("order")}><span>01</span>Aktiv ordre</button>
           <button className={view === "archive" ? "active" : ""} onClick={() => setView("archive")}><span>02</span>Arkiv</button>
           <button className={view === "stats" ? "active" : ""} onClick={() => setView("stats")}><span>03</span>Statistikk</button>
+          {enterprise.authEnabled && enterprise.storeRole === "store_admin" && <button className={view === "users" ? "active" : ""} onClick={() => setView("users")}><span>04</span>Brukere</button>}
         </nav>
 
         <StoreSelector />
@@ -1253,6 +1255,8 @@ export default function Page() {
             <button className="primary" onClick={exportAllArchiveCsv} disabled={!sentOrders.length}>Eksporter all historikk til Excel/CSV</button>
           </section>
         )}
+
+        {view === "users" && enterprise.authEnabled && enterprise.storeRole === "store_admin" && <UserAdminPanel />}
       </main>
 
       <aside className={`stickyStatus ${selected ? "sheetOpenHidden" : ""}`}>
@@ -1267,7 +1271,9 @@ export default function Page() {
         <button onClick={() => setView("order")}>Ordre</button>
         <button onClick={() => setView("archive")}>Arkiv</button>
         <button onClick={() => setView("stats")}>Statistikk</button>
-        <button onClick={() => { setView("order"); setTimeout(() => document.getElementById("export")?.scrollIntoView({ behavior: "smooth" }), 80); }}>E-post</button>
+        {enterprise.authEnabled && enterprise.storeRole === "store_admin"
+          ? <button onClick={() => setView("users")}>Brukere</button>
+          : <button onClick={() => { setView("order"); setTimeout(() => document.getElementById("export")?.scrollIntoView({ behavior: "smooth" }), 80); }}>E-post</button>}
       </nav>
 
       {selected && (

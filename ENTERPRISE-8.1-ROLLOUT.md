@@ -28,3 +28,12 @@ migrering er gjennomført. Nye varehus bruker den isolerte
 4. Verifiser innlogging og varehustilgang i en testdeploy.
 5. Sett `NEXT_PUBLIC_ENTERPRISE_AUTH=true` i Vercel.
 6. Migrer Tønsberg-data og fjern legacy-reglene først etter godkjent kontroll.
+
+## Brukeradministrasjon
+
+Kontrollpanelet oppretter Firebase-brukeren på serveren og sender deretter en
+passordlenke til jobb-eposten. Mobilnummer brukes ikke som passord.
+
+Server-API-et krever `FIREBASE_SERVICE_ACCOUNT_KEY_BASE64` i Vercel. Verdien
+er base64-kodet JSON fra en Firebase service account og må aldri ha prefikset
+`NEXT_PUBLIC_` eller lagres i Git.

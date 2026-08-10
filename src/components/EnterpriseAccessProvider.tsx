@@ -52,6 +52,7 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
   const [user, setUser] = useState<User>();
   const [profile, setProfile] = useState<EnterpriseUserProfile>();
   const [stores, setStores] = useState<EnterpriseStore[]>(authEnabled ? [] : [legacyStore]);
+  const [storeRole, setStoreRole] = useState<StoreRole>();
   const [storeId, setStoreIdState] = useState(legacyStore.id);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,6 +66,7 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
       setUser(nextUser || undefined);
       setProfile(undefined);
       setStores([]);
+      setStoreRole(undefined);
       if (!nextUser) {
         setReady(true);
         return;
@@ -87,6 +89,18 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
       setReady(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (!authEnabled || !user || !storeId) return;
+    if (profile?.systemRole === "platform_admin") {
+      setStoreRole("store_admin");
+      return;
+    }
+    getDoc(doc(db, `stores/${storeId}/members/${user.uid}`)).then((snapshot) => {
+      const role = snapshot.data()?.role;
+      setStoreRole(role === "store_admin" ? "store_admin" : "user");
+    });
+  }, [profile?.systemRole, storeId, user]);
 
   function setStoreId(nextStoreId: string) {
     if (!stores.some((store) => store.id === nextStoreId)) return;
@@ -156,6 +170,7 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
     profile,
     store,
     stores,
+    storeRole,
     setStoreId,
     signOut: () => firebaseSignOut(auth),
   };
