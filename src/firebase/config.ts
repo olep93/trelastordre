@@ -3,7 +3,7 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCgsBIE-qFuL_M9V5fiJEUDzT5dYULLcU",
+  apiKey: "AIzaSyCgsBIE-qFul_M9V5fiJEUDzT5dYULlLcU",
   authDomain: "trelastordre.firebaseapp.com",
   projectId: "trelastordre",
   storageBucket: "trelastordre.firebasestorage.app",

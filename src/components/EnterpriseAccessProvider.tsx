@@ -126,8 +126,16 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
       setError("Skriv inn e-postadressen først.");
       return;
     }
-    await sendPasswordResetEmail(auth, email.trim());
-    setError("Tilbakestillingslenke er sendt på e-post.");
+    setSubmitting(true);
+    setError("");
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setError("Tilbakestillingslenke er sendt. Kontroller også søppelpost.");
+    } catch {
+      setError("Kunne ikke sende tilbakestillingslenken. Kontroller e-postadressen og prøv igjen.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (!ready) return <main className="enterpriseLoading">Klargjør arbeidsflaten …</main>;
@@ -144,7 +152,7 @@ export function EnterpriseAccessProvider({ children }: { children: React.ReactNo
           <label>Passord<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>
           {error && <div className="enterpriseLoginMessage">{error}</div>}
           <button className="primary" type="submit" disabled={submitting}>{submitting ? "Logger inn …" : "Logg inn"}</button>
-          <button className="textButton" type="button" onClick={resetPassword}>Glemt passord?</button>
+          <button className="textButton" type="button" onClick={resetPassword} disabled={submitting}>Glemt passord?</button>
         </form>
       </main>
     );
