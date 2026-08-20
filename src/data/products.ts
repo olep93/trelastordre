@@ -5,6 +5,7 @@ export type Category = {
   material: Material;
   icon: string;
   falling?: boolean;
+  fixedLengths?: string[];
   products: string[];
 };
 
@@ -21,9 +22,16 @@ export const categories: Category[] = [
     material: "gran",
     icon: "G",
     products: [
-      "23x48", "30x48", "36x48", "48x48", "36x73", "36x98",
+      "23x48", "30x48", "36x48", "48x48", "36x68", "36x73", "36x98",
       "36x148", "36x198", "48x68", "48x98", "48x148", "48x198",
     ],
+  },
+  {
+    name: "Lekt / Rekke Gran – Bunt",
+    material: "gran",
+    icon: "B",
+    fixedLengths: ["4,8"],
+    products: ["11x36", "23x48", "30x48", "36x48", "48x48"],
   },
   {
     name: "K-Virke Impregnert",
@@ -102,6 +110,7 @@ export const categories: Category[] = [
 
 export function buildMailName(categoryName: string, displayName: string) {
   if (categoryName === "K-Virke Gran") return `${displayName} Gran`;
+  if (categoryName === "Lekt / Rekke Gran – Bunt") return `${displayName} Gran Bunt`;
   if (categoryName === "K-Virke Impregnert") return `${displayName} Impregnert`;
   if (categoryName === "Kledning Impregnert") return `${displayName} Impregnert`;
 
@@ -115,9 +124,11 @@ export function buildMailName(categoryName: string, displayName: string) {
 }
 
 export function lengthsFor(category: Category, displayName: string) {
+  if (category.fixedLengths) return [...category.fixedLengths];
+
   const lengths = [...STANDARD_LENGTHS];
 
-  if (category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(displayName)) {
+  if (category.name === "K-Virke Gran" && ["36x68", "48x68", "48x98"].includes(displayName)) {
     lengths.unshift("2,4");
   }
 
@@ -129,4 +140,20 @@ export function lengthsFor(category: Category, displayName: string) {
   }
 
   return lengths;
+}
+
+// Produktene i dagens bestillingskatalog er kontrollert mot Moelvens
+// sortimentsavtale av 01.04.2026. Nye kategorier skal ikke telle mot
+// modulvogn før de uttrykkelig legges til her.
+const MODULE_AGREEMENT_CATEGORIES = new Set([
+  "K-Virke Gran",
+  "K-Virke Impregnert",
+  "Lekt / Rekke Gran – Bunt",
+  "Kledning Gran",
+  "Kledning Impregnert",
+  "Terrassebord / Altan / Vannbrett Impregnert",
+]);
+
+export function contributesToModule(categoryName: string) {
+  return MODULE_AGREEMENT_CATEGORIES.has(categoryName);
 }

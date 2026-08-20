@@ -39,7 +39,7 @@ function FastProductSheetComponent({
     [draft],
   );
 
-  const isHalfProduct = category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(product);
+  const isHalfProduct = category.name === "K-Virke Gran" && ["36x68", "48x68", "48x98"].includes(product);
 
   const commitPending = useCallback(async () => {
     if (committingRef.current) return;

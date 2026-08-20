@@ -14,7 +14,7 @@ import {
   runTransaction,
   setDoc,
 } from "firebase/firestore";
-import { categories, lengthsFor, buildMailName, type Category, type Material } from "@/data/products";
+import { categories, lengthsFor, buildMailName, contributesToModule, type Category, type Material } from "@/data/products";
 import { db } from "@/firebase/config";
 import { FastProductSheet } from "@/components/FastProductSheet";
 import { OrderConfirmationPanel, type ArchivedOrderLine, type ConfirmationStatus } from "@/components/OrderConfirmationPanel";
@@ -52,6 +52,7 @@ type Line = {
   length: string;
   qty: number;
   material: Material;
+  moduleEligible: boolean;
 };
 
 type SentOrder = {
@@ -175,6 +176,7 @@ function truckLines(truck: Truck): Line[] {
         length: parsed.length,
         qty,
         material: meta.material,
+        moduleEligible: contributesToModule(parsed.category),
       };
     })
     .filter(Boolean)
@@ -191,16 +193,22 @@ function truckLines(truck: Truck): Line[] {
 
 function countForTruck(truck: Truck) {
   const lines = truckLines(truck);
-  const gran = lines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
-  const imp = lines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
-  return { gran, imp, total: gran + imp, lines: lines.length };
+  const moduleLines = lines.filter((line) => line.moduleEligible);
+  const gran = moduleLines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
+  const imp = moduleLines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
+  const route = lines.filter((line) => !line.moduleEligible).reduce((sum, line) => sum + line.qty, 0);
+  const overall = lines.reduce((sum, line) => sum + line.qty, 0);
+  return { gran, imp, total: gran + imp, route, overall, lines: lines.length };
 }
 
 function countAll(order: WeeklyOrder) {
   const lines = order.trucks.flatMap(truckLines);
-  const gran = lines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
-  const imp = lines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
-  return { gran, imp, total: gran + imp, lines: lines.length };
+  const moduleLines = lines.filter((line) => line.moduleEligible);
+  const gran = moduleLines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
+  const imp = moduleLines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
+  const route = lines.filter((line) => !line.moduleEligible).reduce((sum, line) => sum + line.qty, 0);
+  const overall = lines.reduce((sum, line) => sum + line.qty, 0);
+  return { gran, imp, total: gran + imp, route, overall, lines: lines.length };
 }
 
 function is28x120Terrasse(line: Line) {
@@ -213,13 +221,13 @@ function is28x120Terrasse(line: Line) {
 }
 
 function only28x120Terrasse(truck: Truck) {
-  const lines = truckLines(truck);
+  const lines = truckLines(truck).filter((line) => line.moduleEligible);
   return lines.length > 0 && lines.every((line) => line.material === "impregnert" && is28x120Terrasse(line));
 }
 
 function halfPalletCount(truck: Truck) {
   return truckLines(truck)
-    .filter((line) => line.category === "K-Virke Gran" && line.length === "2,4" && ["48x68", "48x98"].includes(line.displayName))
+    .filter((line) => line.category === "K-Virke Gran" && line.length === "2,4" && ["36x68", "48x68", "48x98"].includes(line.displayName))
     .reduce((sum, line) => sum + line.qty, 0);
 }
 
@@ -229,7 +237,7 @@ function halfPalletStatus(truck: Truck) {
   return {
     count,
     ok,
-    text: ok ? "Halvpall OK" : "48x68/48x98 2,4 m må bestilles to halvplasser av gangen.",
+    text: ok ? "Halvpall OK" : "36x68/48x68/48x98 2,4 m må bestilles to halvplasser av gangen.",
   };
 }
 
@@ -268,23 +276,25 @@ function moduleStatus(truck: Truck) {
 
   const exact = targets.find((t) => t.hit && !t.invalidTerrasse && half.ok);
   if (exact) {
-    return { ok: true, title: "Modulvogntog klart", text: `Treffer ${exact.label}`, target: exact, targets, half };
+    const discount = exact.id === "I16" ? 6 : 8;
+    return { ok: true, title: "Modulvogntog klart", text: `Treffer ${exact.label} · ${discount} % rabatt`, discount, target: exact, targets, half };
   }
 
   const nearest = [...targets].sort((a, b) => a.score - b.score)[0];
 
   if (!half.ok) {
-    return { ok: false, title: "Mangler halvplass", text: half.text, target: nearest, targets, half };
+    return { ok: false, title: "Mangler halvplass", text: half.text, discount: null, target: nearest, targets, half };
   }
 
   if (count.total === 0) {
-    return { ok: false, title: "Neste rutebil", text: "Velg varer for å starte.", target: nearest, targets, half };
+    return { ok: false, title: "Neste rutebil", text: "Velg varer for å starte.", discount: null, target: nearest, targets, half };
   }
 
   return {
     ok: false,
     title: "Neste rutebil",
     text: nearest.invalidTerrasse ? "22 imp-regelen krever kun 28x120 terrassebord." : nearest.text,
+    discount: null,
     target: nearest,
     targets,
     half,
@@ -352,14 +362,17 @@ function orderText(order: WeeklyOrder) {
 
     text += `${truck.name}:\n`;
     text += `Transport: ${status.ok ? "Modul vogntog" : "Neste rutebil"}\n`;
-    text += `Status: ${count.gran} pk gran / ${count.imp} pk impregnert / ${count.total} pk totalt\n`;
-    if (status.ok) text += `Modul: ${status.target.label}\n`;
+    text += `Status modulvogn: ${count.gran} pk gran / ${count.imp} pk impregnert / ${count.total} pk totalt\n`;
+    if (status.ok) {
+      text += `Modul: ${status.target.label}\n`;
+      text += `Rabatt: ${status.discount} %\n`;
+    }
     else text += `Merk: ${status.text}\n`;
     if (!status.half.ok) text += `OBS: ${status.half.text}\n`;
     text += "\n";
 
     categories.forEach((category) => {
-      const catLines = lines.filter((line) => line.category === category.name);
+      const catLines = lines.filter((line) => line.moduleEligible && line.category === category.name);
       if (!catLines.length) return;
 
       text += `${category.name}:\n`;
@@ -369,13 +382,25 @@ function orderText(order: WeeklyOrder) {
       });
       text += "\n";
     });
+
+    const routeLines = lines.filter((line) => !line.moduleEligible);
+    if (routeLines.length) {
+      text += "På rutebil / utenfor modulvogn:\n";
+      routeLines.forEach((line) => {
+        const length = line.length === "Fallende" ? "Fallende lengder" : `${line.length} m`;
+        text += `- ${line.mailName} ${length} - ${line.qty} pk\n`;
+      });
+      text += "\n";
+    }
   });
 
   const total = countAll(order);
   text += "Total oppsummering:\n";
   text += `- Gran: ${total.gran} pk\n`;
   text += `- Impregnert: ${total.imp} pk\n`;
-  text += `- Totalt: ${total.total} pk\n\n`;
+  text += `- Modulvarer totalt: ${total.total} pk\n`;
+  if (total.route) text += `- På rutebil / utenfor modulvogn: ${total.route} pk\n`;
+  text += `- Alle varer: ${total.overall} pk\n\n`;
   text += "Mvh\n";
 
   return text;
@@ -513,7 +538,7 @@ export default function Page() {
   const activeTruck = order.trucks[Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1))] || order.trucks[0];
 
   const activeCount = useMemo(
-    () => activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, lines: 0 },
+    () => activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, route: 0, overall: 0, lines: 0 },
     [activeTruck],
   );
 
@@ -764,7 +789,7 @@ export default function Page() {
       sentBy: userName,
       subject,
       body: preview,
-      totalPackages: total.total,
+      totalPackages: total.overall,
       totalLines: total.lines,
       lagerOrderNumber,
       originalLines: structuredOrderLines(order),
@@ -775,7 +800,7 @@ export default function Page() {
       timestamp: Date.now(),
       userName,
       action: "send",
-      text: `arkiverte Lagerordre ${lagerOrderNumber} som bestilt (${total.total} pk)`,
+      text: `arkiverte Lagerordre ${lagerOrderNumber} som bestilt (${total.overall} pk)`,
     });
 
     showToast(`Lagerordre ${lagerOrderNumber} er arkivert som bestilt`);
@@ -966,7 +991,7 @@ export default function Page() {
             <div>
               <span className="eyebrow">Aktiv liveordre</span>
               <h2>Lagerordre {currentLagerOrderNumber()}</h2>
-              <p>Uke {order.week} · {storeName} · {total.total} pakker · {total.lines} linjer</p>
+              <p>Uke {order.week} · {storeName} · {total.overall} pakker · {total.lines} linjer</p>
             </div>
             <button className="primary" onClick={addTruck}>+ Ny bil</button>
           </div>
@@ -1002,7 +1027,7 @@ export default function Page() {
 
                   <div className="truckFooter">
                     <span>{count.lines} linjer</span>
-                    <strong>{count.total} pk</strong>
+                    <strong>{count.overall} pk</strong>
                   </div>
                 </button>
               );
@@ -1015,7 +1040,7 @@ export default function Page() {
             <article className="counterCard">
               <span className="label">Aktiv bil</span>
               <strong>{activeTruck.name}</strong>
-              <small>{activeCount.lines} linjer / {activeCount.total} pakker</small>
+              <small>{activeCount.lines} linjer / {activeCount.overall} pakker totalt</small>
             </article>
             <article className="counterCard">
               <span className="label">Gran</span>
@@ -1102,7 +1127,7 @@ export default function Page() {
           <div className="exportHeader">
             <div>
               <h2>Bestilling</h2>
-              <p>{total.lines} linjer / {total.total} pakker totalt / {order.trucks.length} bil(er)</p>
+              <p>{total.lines} linjer / {total.overall} pakker totalt / {order.trucks.length} bil(er)</p>
             </div>
             <div className="mailBadge">{RECIPIENT}</div>
           </div>
