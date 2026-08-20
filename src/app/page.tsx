@@ -176,7 +176,7 @@ function truckLines(truck: Truck): Line[] {
         length: parsed.length,
         qty,
         material: meta.material,
-        moduleEligible: contributesToModule(parsed.category),
+        moduleEligible: contributesToModule(parsed.category, parsed.displayName),
       };
     })
     .filter(Boolean)
@@ -1067,6 +1067,12 @@ export default function Page() {
               <span>{activeStatus.half.text} Nå: {halfCount} halvplass(er).</span>
             </div>
           )}
+          {!!activeCount.route && (
+            <div className="validationBanner route">
+              <strong>Utenfor modulvogn</strong>
+              <span>{activeCount.route} pk går på rutebil og påvirker ikke modulberegningen.</span>
+            </div>
+          )}
         </section>
 
         <section className="toolBar">
@@ -1103,12 +1109,13 @@ export default function Page() {
                 <div className="categoryBody productListOnly">
                   {visible.map((product) => {
                     const qty = productQty(category, product);
-                    const halfProduct = category.name === "K-Virke Gran" && ["48x68", "48x98"].includes(product);
+                    const moduleEligible = contributesToModule(category.name, product);
+                    const halfProduct = category.name === "K-Virke Gran" && ["36x68", "48x68", "48x98"].includes(product);
                     return (
-                      <button key={`${category.name}-${product}`} className={`productRow ${qty ? "hasQty" : ""} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} onClick={() => setSelected({ category, product })}>
+                      <button key={`${category.name}-${product}`} className={`productRow ${qty ? "hasQty" : ""} ${moduleEligible ? "moduleProduct" : "routeProduct"} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} onClick={() => setSelected({ category, product })}>
                         <div className="productRowMain">
                           <strong>{product}</strong>
-                          
+                          <span className={`transportTag ${moduleEligible ? "module" : "route"}`}>{moduleEligible ? "Teller mot modulvogn" : "Rutebil · utenfor modulvogn"}</span>
                         </div>
                         <div className="productRowSide">
                           <b>{qty}</b>

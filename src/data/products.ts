@@ -145,15 +145,22 @@ export function lengthsFor(category: Category, displayName: string) {
 // Produktene i dagens bestillingskatalog er kontrollert mot Moelvens
 // sortimentsavtale av 01.04.2026. Nye kategorier skal ikke telle mot
 // modulvogn før de uttrykkelig legges til her.
-const MODULE_AGREEMENT_CATEGORIES = new Set([
-  "K-Virke Gran",
-  "K-Virke Impregnert",
-  "Lekt / Rekke Gran – Bunt",
-  "Kledning Gran",
-  "Kledning Impregnert",
-  "Terrassebord / Altan / Vannbrett Impregnert",
-]);
+const MODULE_AGREEMENT_PRODUCTS: Record<string, Set<string>> = {
+  "K-Virke Gran": new Set(categories.find((category) => category.name === "K-Virke Gran")?.products || []),
+  "K-Virke Impregnert": new Set([
+    "23x48", "30x48", "36x48", "48x48", "36x73", "48x73",
+    "36x98", "36x148", "36x198", "48x98", "48x148", "48x198",
+  ]),
+  "Lekt / Rekke Gran – Bunt": new Set(["11x36", "23x48", "30x48", "36x48", "48x48"]),
+  "Kledning Gran": new Set(categories.find((category) => category.name === "Kledning Gran")?.products || []),
+  "Kledning Impregnert": new Set(categories.find((category) => category.name === "Kledning Impregnert")?.products || []),
+  "Terrassebord / Altan / Vannbrett Impregnert": new Set([
+    "21x95 terrassebord",
+    "28x120 Terrassebord",
+    "28x145 terrassebord",
+  ]),
+};
 
-export function contributesToModule(categoryName: string) {
-  return MODULE_AGREEMENT_CATEGORIES.has(categoryName);
+export function contributesToModule(categoryName: string, displayName: string) {
+  return MODULE_AGREEMENT_PRODUCTS[categoryName]?.has(displayName) ?? false;
 }

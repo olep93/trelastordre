@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { buildMailName, type Category } from "@/data/products";
+import { buildMailName, contributesToModule, type Category } from "@/data/products";
 
 type Props = {
   category: Category;
@@ -40,6 +40,7 @@ function FastProductSheetComponent({
   );
 
   const isHalfProduct = category.name === "K-Virke Gran" && ["36x68", "48x68", "48x98"].includes(product);
+  const moduleEligible = contributesToModule(category.name, product);
 
   const commitPending = useCallback(async () => {
     if (committingRef.current) return;
@@ -119,6 +120,11 @@ function FastProductSheetComponent({
         <div className={`sheetTotal ${total ? "active" : ""} ${halfInvalid && isHalfProduct ? "danger" : ""}`}>
           <span>{halfInvalid && isHalfProduct ? "Halvpall-regel ikke oppfylt" : "Valgt på denne varen"}</span>
           <strong>{total} pk</strong>
+        </div>
+
+        <div className={`sheetTransportNotice ${moduleEligible ? "module" : "route"}`}>
+          <strong>{moduleEligible ? "Teller mot modulvogn" : "På rutebil / utenfor modulvogn"}</strong>
+          <span>{moduleEligible ? "Pakkene inngår i beregningen av modulvognen." : "Pakkene påvirker ikke modulmengde eller rabatt."}</span>
         </div>
 
         <div className="sheetLengthList">
