@@ -196,9 +196,12 @@ function countForTruck(truck: Truck) {
   const moduleLines = lines.filter((line) => line.moduleEligible);
   const gran = moduleLines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
   const imp = moduleLines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
-  const route = lines.filter((line) => !line.moduleEligible).reduce((sum, line) => sum + line.qty, 0);
+  const routeLines = lines.filter((line) => !line.moduleEligible);
+  const routeGran = routeLines.filter((line) => line.material === "gran").reduce((sum, line) => sum + line.qty, 0);
+  const routeImp = routeLines.filter((line) => line.material === "impregnert").reduce((sum, line) => sum + line.qty, 0);
+  const route = routeGran + routeImp;
   const overall = lines.reduce((sum, line) => sum + line.qty, 0);
-  return { gran, imp, total: gran + imp, route, overall, lines: lines.length };
+  return { gran, imp, total: gran + imp, routeGran, routeImp, route, overall, lines: lines.length };
 }
 
 function countAll(order: WeeklyOrder) {
@@ -206,9 +209,12 @@ function countAll(order: WeeklyOrder) {
   const moduleLines = lines.filter((line) => line.moduleEligible);
   const gran = moduleLines.filter((l) => l.material === "gran").reduce((sum, l) => sum + l.qty, 0);
   const imp = moduleLines.filter((l) => l.material === "impregnert").reduce((sum, l) => sum + l.qty, 0);
-  const route = lines.filter((line) => !line.moduleEligible).reduce((sum, line) => sum + line.qty, 0);
+  const routeLines = lines.filter((line) => !line.moduleEligible);
+  const routeGran = routeLines.filter((line) => line.material === "gran").reduce((sum, line) => sum + line.qty, 0);
+  const routeImp = routeLines.filter((line) => line.material === "impregnert").reduce((sum, line) => sum + line.qty, 0);
+  const route = routeGran + routeImp;
   const overall = lines.reduce((sum, line) => sum + line.qty, 0);
-  return { gran, imp, total: gran + imp, route, overall, lines: lines.length };
+  return { gran, imp, total: gran + imp, routeGran, routeImp, route, overall, lines: lines.length };
 }
 
 function is28x120Terrasse(line: Line) {
@@ -247,6 +253,16 @@ const BASE_TARGETS = [
   { id: "I16", label: "16 imp + 0 gran", gran: 0, imp: 16 },
   { id: "I22T", label: "22 imp + 0 gran kun 28x120 terrassebord", gran: 0, imp: 22 },
 ];
+
+function apparentModuleTarget(truck: Truck) {
+  const count = countForTruck(truck);
+  if (!count.route || moduleStatus(truck).ok) return null;
+  return BASE_TARGETS.find((target) =>
+    target.gran === count.gran + count.routeGran &&
+    target.imp === count.imp + count.routeImp &&
+    (target.id !== "I22T" || only28x120Terrasse(truck)),
+  ) || null;
+}
 
 function progress(target: { gran: number; imp: number }, gran: number, imp: number) {
   const missingGran = Math.max(0, target.gran - gran);
@@ -390,6 +406,10 @@ function orderText(order: WeeklyOrder) {
         const length = line.length === "Fallende" ? "Fallende lengder" : `${line.length} m`;
         text += `- ${line.mailName} ${length} - ${line.qty} pk\n`;
       });
+      const apparentTarget = apparentModuleTarget(truck);
+      if (apparentTarget) {
+        text += `OBS: Totalantallet ser ut som ${apparentTarget.label}, men ${count.route} pk er utenfor rasjonalitetsrabattlisten. Bilen er derfor IKKE en full modulvogn.\n`;
+      }
       text += "\n";
     }
   });
@@ -538,12 +558,16 @@ export default function Page() {
   const activeTruck = order.trucks[Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1))] || order.trucks[0];
 
   const activeCount = useMemo(
-    () => activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, route: 0, overall: 0, lines: 0 },
+    () => activeTruck ? countForTruck(activeTruck) : { gran: 0, imp: 0, total: 0, routeGran: 0, routeImp: 0, route: 0, overall: 0, lines: 0 },
     [activeTruck],
   );
 
   const activeStatus = useMemo(
     () => activeTruck ? moduleStatus(activeTruck) : null,
+    [activeTruck],
+  );
+  const activeApparentTarget = useMemo(
+    () => activeTruck ? apparentModuleTarget(activeTruck) : null,
     [activeTruck],
   );
 
@@ -1068,9 +1092,10 @@ export default function Page() {
             </div>
           )}
           {!!activeCount.route && (
-            <div className="validationBanner route">
-              <strong>Utenfor modulvogn</strong>
-              <span>{activeCount.route} pk går på rutebil og påvirker ikke modulberegningen.</span>
+            <div className={`validationBanner route ${activeApparentTarget ? "critical" : ""}`}>
+              <strong>PÅ RUTEBIL / KAN IKKE BIDRA MOT MODULVOGN</strong>
+              <span>{activeCount.route} pk er utenfor rasjonalitetsrabattlisten og påvirker verken modulmengde eller rabatt.</span>
+              {activeApparentTarget && <b>Totalantallet ligner {activeApparentTarget.label}, men dette er IKKE en full modulvogn. Du har bare {activeCount.total} godkjente modulpakker.</b>}
             </div>
           )}
         </section>
@@ -1115,7 +1140,7 @@ export default function Page() {
                       <button key={`${category.name}-${product}`} className={`productRow ${qty ? "hasQty" : ""} ${moduleEligible ? "moduleProduct" : "routeProduct"} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} onClick={() => setSelected({ category, product })}>
                         <div className="productRowMain">
                           <strong>{product}</strong>
-                          <span className={`transportTag ${moduleEligible ? "module" : "route"}`}>{moduleEligible ? "Teller mot modulvogn" : "Rutebil · utenfor modulvogn"}</span>
+                          <span className={`transportTag ${moduleEligible ? "module" : "route"}`}>{moduleEligible ? "Teller mot modulvogn" : "På rutebil · kan ikke bidra mot modulvogn"}</span>
                         </div>
                         <div className="productRowSide">
                           <b>{qty}</b>

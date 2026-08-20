@@ -147,10 +147,12 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .moduleCard.warn { border-color: #edc18d; background: #fff8ed; }
 .moduleCard.warn strong { color: var(--amber); }
 .validationBanner { margin-top: 8px; padding: 9px 11px; border-radius: 4px; }
-.validationBanner strong, .validationBanner span { display: block; }
+.validationBanner strong, .validationBanner span, .validationBanner b { display: block; }
 .validationBanner span { margin-top: 2px; font-size: 11px; }
+.validationBanner b { margin-top: 7px; font-size: 12px; line-height: 1.35; }
 .validationBanner.danger { color: var(--red); border: 1px solid #e8aaa4; background: #fff0ef; }
 .validationBanner.route { color: #74470b; border: 1px solid #e5bc82; background: #fff8ed; }
+.validationBanner.route.critical { color: #9d2017; border: 2px solid #d94b3d; background: #fff0ef; box-shadow: 0 4px 14px rgba(157,32,23,.12); }
 .sheetTransportNotice { margin: 9px 0; padding: 9px 11px; border: 1px solid; border-radius: 4px; }
 .sheetTransportNotice strong, .sheetTransportNotice span { display: block; }
 .sheetTransportNotice span { margin-top: 2px; font-size: 10px; }
