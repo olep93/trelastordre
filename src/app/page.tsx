@@ -1239,6 +1239,9 @@ export default function Page() {
               {!!sentOrders.length && visibleSentOrders.length === 0 && <div className="emptyArchive">Ingen lagerordrer matcher søket.</div>}
               {visibleSentOrders.map((sent) => {
                 const transportSummaries = archivedTruckSummaries(sent.originalLines || []);
+                const moduleTruckCount = transportSummaries.filter(({ status }) => status.ok).length;
+                const incompleteTruckCount = transportSummaries.filter(({ status }) => !status.ok).length;
+                const routeLineCount = (sent.originalLines || []).filter((line) => !archivedLineContributes(line)).length;
                 return (
                 <details className="archiveItem" key={sent.id}>
                   <summary>
@@ -1248,6 +1251,13 @@ export default function Page() {
                         {sent.id && confirmationStatuses[sent.id]?.count > 0 && <span className="moelvenConfirmed">Bekreftet av Moelven</span>}
                       </div>
                       <strong>{sent.subject}</strong>
+                      {!!transportSummaries.length && (
+                        <span className="archiveTransportOverview">
+                          {moduleTruckCount} {moduleTruckCount === 1 ? "modulvogn" : "modulvogner"}
+                          {!!incompleteTruckCount && ` · ${incompleteTruckCount} ${incompleteTruckCount === 1 ? "ufullstendig bil" : "ufullstendige biler"}`}
+                          {` · ${routeLineCount} ${routeLineCount === 1 ? "varelinje" : "varelinjer"} på rutebil`}
+                        </span>
+                      )}
                       <span>{formatTime(sent.sentAt)} · arkivert av {sent.sentBy}</span>
                     </div>
                     <div className="archiveOrderFacts">

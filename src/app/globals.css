@@ -225,6 +225,7 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .archiveOrderIdentity .archiveOrderNumber { width: fit-content; margin: 0 0 5px; padding: 3px 6px; display: block; color: #fff; border-radius: 3px; background: var(--orange); font-size: 8px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .moelvenConfirmed { margin: 0 0 5px !important; padding: 3px 6px; color: #116d36 !important; border: 1px solid #a9d8b8; border-radius: 3px; background: #edf8f1; font-size: 8px !important; font-weight: 850; letter-spacing: .05em; text-transform: uppercase; }
 .archiveOrderIdentity > strong { display: block; overflow-wrap: anywhere; color: var(--blue-900); font-size: 13px; }
+.archiveOrderIdentity > span.archiveTransportOverview { width: fit-content; margin-top: 5px; padding: 4px 6px; display: block; color: #173f61; border: 1px solid #c5d5e3; border-radius: 3px; background: #edf3f8; font-size: 9px; font-weight: 850; }
 .archiveOrderIdentity > span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
 .archiveOrderFacts { display: grid; grid-template-columns: repeat(3,minmax(78px,auto)); gap: 4px; }
 .archiveOrderFacts > span { min-height: 43px; padding: 4px 7px; display: grid !important; align-content: center; text-align: center; color: var(--muted); border: 1px solid #dce3ea; border-radius: 4px; background: #f4f7f9; font-size: 9px !important; }
