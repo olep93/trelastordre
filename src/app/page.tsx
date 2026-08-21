@@ -1202,8 +1202,11 @@ export default function Page() {
               {visibleSentOrders.map((sent) => {
                 const transportSummaries = archivedTruckSummaries(sent.originalLines || []);
                 const moduleTruckCount = transportSummaries.filter(({ status }) => status.ok).length;
-                const incompleteTruckCount = transportSummaries.filter(({ status }) => !status.ok).length;
-                const routeLineCount = (sent.originalLines || []).filter((line) => !archivedLineContributes(line)).length;
+                const routeTruckCount = transportSummaries.filter(({ status }) => !status.ok).length;
+                const truckStatusByName = new Map(transportSummaries.map(({ truckName, status }) => [truckName, status]));
+                const routeLineCount = (sent.originalLines || []).filter((line) =>
+                  !archivedLineContributes(line) || !truckStatusByName.get(line.truckName)?.ok,
+                ).length;
                 return (
                 <details className="archiveItem" key={sent.id}>
                   <summary>
@@ -1216,7 +1219,7 @@ export default function Page() {
                       {!!transportSummaries.length && (
                         <span className="archiveTransportOverview">
                           {moduleTruckCount} {moduleTruckCount === 1 ? "modulvogn" : "modulvogner"}
-                          {!!incompleteTruckCount && ` · ${incompleteTruckCount} ${incompleteTruckCount === 1 ? "ufullstendig bil" : "ufullstendige biler"}`}
+                          {!!routeTruckCount && ` · ${routeTruckCount} ${routeTruckCount === 1 ? "rutebil" : "rutebiler"}`}
                           {` · ${routeLineCount} ${routeLineCount === 1 ? "varelinje" : "varelinjer"} på rutebil`}
                         </span>
                       )}
@@ -1250,7 +1253,7 @@ export default function Page() {
                       <div className="archiveTransportSummary">
                         {transportSummaries.map(({ truckName, status, count }) => (
                           <div className={`archiveTruckStatus ${status.ok ? "module" : "route"}`} key={truckName}>
-                            <strong>{truckName}: {status.ok ? `Modulvogn · ${status.target.label}` : "Ikke full modulvogn"}</strong>
+                            <strong>{truckName}: {status.ok ? `Modulvogn · ${status.target.label}` : "Rutebil"}</strong>
                             <span>{count.gran} gran + {count.imp} imp teller mot modul{status.ok ? ` · ${status.discount} % rabatt` : ` · ${status.text}`}</span>
                             {!!count.route && <b>{count.route} pk på rutebil / utenfor modulvogn</b>}
                           </div>
@@ -1267,8 +1270,12 @@ export default function Page() {
                                 <td className="archiveProductCell">
                                   <strong>{line.dimension} · {line.length === "Fallende" ? line.length : `${line.length} m`}</strong>
                                   <span>{line.category} · {line.truckName}</span>
-                                  <em className={`archiveTransportTag ${archivedLineContributes(line) ? "module" : "route"}`}>
-                                    {archivedLineContributes(line) ? "Bidro mot modulvogn" : "På rutebil · bidro ikke mot modulvogn"}
+                                  <em className={`archiveTransportTag ${truckStatusByName.get(line.truckName)?.ok && archivedLineContributes(line) ? "module" : "route"}`}>
+                                    {!archivedLineContributes(line)
+                                      ? "Rutebil · utenfor rasjonalitetsrabatt"
+                                      : truckStatusByName.get(line.truckName)?.ok
+                                        ? "Bidro mot modulvogn"
+                                        : "Rutebil · modulmengde ikke nådd"}
                                   </em>
                                 </td>
                                 <td className="archivePackagesCell"><strong>{line.packages}</strong><span>pk</span></td>
