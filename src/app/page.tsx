@@ -79,12 +79,6 @@ type LogEntry = {
   action: string;
 };
 
-type PresenceUser = {
-  id: string;
-  name: string;
-  lastSeen: number;
-};
-
 type SelectedProduct = {
   category: Category;
   product: string;
@@ -478,7 +472,6 @@ export default function Page() {
   const [saving, setSaving] = useState(false);
   const [pendingSync, setPendingSync] = useState(false);
 
-  const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [userReady, setUserReady] = useState(false);
@@ -496,24 +489,15 @@ export default function Page() {
   const [view, setView] = useState<"order" | "archive" | "stats" | "users">("order");
   const [archiveOpen, setArchiveOpen] = useState(true);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [presence, setPresence] = useState<PresenceUser[]>([]);
 
   useEffect(() => {
     if (enterprise.authEnabled) {
-      setUserId(enterprise.firebaseUser?.uid || "");
       setUserName(enterprise.profile?.displayName || enterprise.firebaseUser?.displayName || enterprise.firebaseUser?.email || "");
       setUserReady(true);
       return;
     }
 
-    let id = localStorage.getItem("trelastordre-user-id");
-    if (!id) {
-      id = randomId("u");
-      localStorage.setItem("trelastordre-user-id", id);
-    }
-
     const name = localStorage.getItem("trelastordre-user-name") || "";
-    setUserId(id);
     setUserName(name);
     setUserReady(true);
   }, [enterprise.authEnabled, enterprise.firebaseUser, enterprise.profile]);
@@ -522,7 +506,6 @@ export default function Page() {
     let unsubOrder: (() => void) | undefined;
     let unsubArchive: (() => void) | undefined;
     let unsubLogs: (() => void) | undefined;
-    let unsubPresence: (() => void) | undefined;
 
     async function start() {
       setLoading(true);
@@ -550,10 +533,6 @@ export default function Page() {
 
       // StableSync: live activity log disabled for speed.
 
-      unsubPresence = onSnapshot(
-        query(collection(db, storeCollectionPath(storeId, "presence")), orderBy("lastSeen", "desc"), limit(20)),
-        (snap) => setPresence(snap.docs.map((d) => d.data() as PresenceUser)),
-      );
     }
 
     start().catch(() => setLoading(false));
@@ -562,18 +541,8 @@ export default function Page() {
       unsubOrder?.();
       unsubArchive?.();
       unsubLogs?.();
-      unsubPresence?.();
     };
   }, [storeId, storeName]);
-
-  useEffect(() => {
-    if (!userId || !userName) return;
-
-    const update = () => setDoc(doc(db, storeDocumentPath(storeId, "presence", userId)), { id: userId, name: userName, lastSeen: Date.now() }, { merge: true });
-    update();
-    const interval = window.setInterval(update, 30000);
-    return () => window.clearInterval(interval);
-  }, [storeId, userId, userName]);
 
   const activeTruck = order.trucks[Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1))] || order.trucks[0];
 
@@ -653,7 +622,6 @@ export default function Page() {
     if (!clean) return;
     localStorage.setItem("trelastordre-user-name", clean);
     setUserName(clean);
-    if (userId) setDoc(doc(db, storeDocumentPath(storeId, "presence", userId)), { id: userId, name: clean, lastSeen: Date.now() }, { merge: true });
   }
 
 
@@ -966,7 +934,7 @@ export default function Page() {
           <Image src="/obs-bygg-logo.png" alt="Obs BYGG" width={120} height={80} />
           <span className="eyebrow dark">Trelastordre Enterprise</span>
           <h1>Hva heter du?</h1>
-          <p>Navnet lagres på denne enheten og brukes i endringslogg, arkiv og online-status.</p>
+          <p>Navnet lagres på denne enheten og brukes i endringslogg og arkiv.</p>
           <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="F.eks. Ole eller Kristoffer" autoFocus />
           <button className="primary" disabled={!nameInput.trim()} onClick={saveName}>Fortsett</button>
         </section>
@@ -1010,13 +978,7 @@ export default function Page() {
             <strong>Hei, {userName}</strong>
             <span>Sist endret av {order.lastEditedBy || "ingen ennå"}</span>
           </div>
-          <div className="presenceUsers">
-            {presence.slice(0, 6).map((user) => {
-              const online = Date.now() - user.lastSeen < 90000;
-              return <span key={user.id} className={online ? "online" : ""}>{online ? "●" : "○"} {user.name}</span>;
-            })}
-            {!enterprise.authEnabled && <button className="textButton" onClick={() => { localStorage.removeItem("trelastordre-user-name"); setUserName(""); }}>Endre navn</button>}
-          </div>
+          {!enterprise.authEnabled && <button className="textButton" onClick={() => { localStorage.removeItem("trelastordre-user-name"); setUserName(""); }}>Endre navn</button>}
         </section>
 
         <nav className="appTabs">
