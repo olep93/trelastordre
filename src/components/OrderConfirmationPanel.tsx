@@ -223,14 +223,14 @@ export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lager
       )}
 
       {!!combinedLines.length && (
-        <div className="combinedConfirmation">
-          <div className="combinedConfirmationHeader">
+        <details className="combinedConfirmation">
+          <summary className="combinedConfirmationHeader">
             <div>
               <h4>Samlet ordrebekreftelse</h4>
               <p>Summert fra {confirmations.length} {confirmations.length === 1 ? "PDF" : "PDF-er"} · {combinedLines.length} varelinjer</p>
             </div>
-            <strong>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pakker</strong>
-          </div>
+            <strong>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pakker · Vis</strong>
+          </summary>
           <div className="confirmationTableWrap combinedTableWrap">
             <table className="confirmationTable combinedConfirmationTable">
               <thead><tr><th>Vare</th><th>Pakker</th><th>Antall</th></tr></thead>
@@ -252,7 +252,7 @@ export function OrderConfirmationPanel({ sentOrderId, storeId, year, week, lager
               <tfoot><tr><td>Totalt fra PDF-ene</td><td>{combinedLines.reduce((sum, line) => sum + line.packages, 0)} pk</td><td></td></tr></tfoot>
             </table>
           </div>
-        </div>
+        </details>
       )}
 
       {!!confirmations.length && <h4 className="sourceDocumentsTitle">Originale PDF-er</h4>}
@@ -287,12 +287,17 @@ function ConfirmationView({ confirmation, originalLines, onOpenPdf }: { confirma
   }, [confirmation.lines, originalLines]);
 
   const hasOriginal = originalLines.length > 0;
+  const changeCounts = comparison.reduce<Record<string, number>>((counts, row) => {
+    counts[row.status] = (counts[row.status] || 0) + 1;
+    return counts;
+  }, {});
   return (
     <details className="confirmationCard">
       <summary>
         <div>
           <strong>{confirmation.orderNumber ? `Moelven-ordre ${confirmation.orderNumber}` : `Ordrebekreftelse ${confirmation.version}`}</strong>
           <span>{confirmation.fileName} · {fileSize(confirmation.fileSize)} · lastet opp av {confirmation.uploadedBy}</span>
+          {hasOriginal && <span className="confirmationDiffSummary">{changeCounts.Endret || 0} endret · {changeCounts.Ny || 0} nye · {changeCounts.Mangler || 0} mangler · {changeCounts.Lik || 0} like</span>}
         </div>
       </summary>
 

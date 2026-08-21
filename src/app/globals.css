@@ -230,6 +230,15 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .archiveOrderFacts > span { min-height: 43px; padding: 4px 7px; display: grid !important; align-content: center; text-align: center; color: var(--muted); border: 1px solid #dce3ea; border-radius: 4px; background: #f4f7f9; font-size: 9px !important; }
 .archiveOrderFacts strong { display: block !important; color: var(--blue-900) !important; font-size: 12px !important; }
 .originalOrderSection, .confirmationSection { margin: 7px 8px 0; padding: 9px; border: 1px solid var(--line); border-radius: 4px; background: #f7f9fb; }
+.originalOrderDisclosure { margin: 7px 8px 0; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.originalOrderDisclosure > summary { padding: 9px 11px; display: flex; align-items: center; justify-content: space-between; gap: 10px; list-style: none; cursor: pointer; }
+.originalOrderDisclosure > summary::-webkit-details-marker, .combinedConfirmation > summary::-webkit-details-marker { display: none; }
+.originalOrderDisclosure > summary strong, .originalOrderDisclosure > summary span { display: block; }
+.originalOrderDisclosure > summary strong { color: var(--blue-900); font-size: 11px; }
+.originalOrderDisclosure > summary span { margin-top: 2px; color: var(--muted); font-size: 8px; }
+.originalOrderDisclosure > summary b { color: var(--blue-900); font-size: 9px; }
+.originalOrderDisclosure[open] > summary { border-bottom: 1px solid var(--line); background: #f4f7f9; }
+.compactOriginalOrder { margin: 0; border: 0; background: #f7f9fb; }
 .sectionTitleRow { margin-bottom: 7px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sectionTitleRow h3, .confirmationSection h3, .confirmationSection h4 { margin: 0; color: var(--blue-900); font-size: 13px; }
 .sectionTitleRow p, .confirmationHeader p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
@@ -267,6 +276,8 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .confirmationCount span { color: var(--muted); }
 .combinedConfirmation { margin-top: 7px; padding: 8px; border: 1px solid #cad6e1; border-radius: 4px; background: #fff; }
 .combinedConfirmationHeader { margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.combinedConfirmation > .combinedConfirmationHeader { margin: 0; padding: 8px; list-style: none; cursor: pointer; }
+.combinedConfirmation[open] > .combinedConfirmationHeader { margin-bottom: 6px; border-bottom: 1px solid var(--line); }
 .combinedConfirmationHeader p { margin: 2px 0 0; color: var(--muted); font-size: 9px; }
 .combinedConfirmationHeader > strong { color: var(--blue-900); font-size: 11px; }
 .combinedConfirmationTable th:nth-child(2) { width: 62px; text-align: right; }
@@ -280,6 +291,7 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .confirmationCard > summary div { display: grid; gap: 2px; }
 .confirmationCard > summary strong { color: var(--blue-900); font-size: 11px; }
 .confirmationCard > summary span { color: var(--muted); font-size: 8px; }
+.confirmationCard > summary span.confirmationDiffSummary { margin-top: 3px; color: #173f61; font-weight: 800; }
 .confirmationMeta { padding: 7px 9px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; border-bottom: 1px solid var(--line); font-size: 9px; }
 .confirmationMeta .secondaryLink { min-height: 30px; margin-left: auto; color: var(--blue-900); background: #fff; }
 .comparisonBlock, .confirmationCard > h4, .confirmationCard > .confirmationTableWrap { margin-left: 8px; margin-right: 8px; }

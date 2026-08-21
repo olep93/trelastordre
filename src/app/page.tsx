@@ -1256,11 +1256,24 @@ export default function Page() {
                       <span><strong>Uke {sent.week}</strong> / {sent.year}</span>
                     </div>
                   </summary>
-                  <div className="originalOrderSection">
-                    <div className="sectionTitleRow">
-                      <div><h3>Opprinnelig bestilling</h3><p>Denne bestillingen endres aldri av opplastede PDF-er.</p></div>
-                      <span>{sent.totalPackages} pakker</span>
-                    </div>
+                  {sent.id && (
+                    <OrderConfirmationPanel
+                      sentOrderId={sent.id}
+                      storeId={storeId}
+                      year={sent.year}
+                      week={sent.week}
+                      lagerOrderNumber={sent.lagerOrderNumber}
+                      uploadedBy={userName}
+                      originalLines={sent.originalLines}
+                      onStatusChange={updateConfirmationStatus}
+                    />
+                  )}
+                  <details className="originalOrderDisclosure">
+                    <summary>
+                      <div><strong>Opprinnelig bestilling</strong><span>Uendret grunnlag · {sent.totalPackages} pakker</span></div>
+                      <b>Vis varelinjer</b>
+                    </summary>
+                  <div className="originalOrderSection compactOriginalOrder">
                     {!!transportSummaries.length && (
                       <div className="archiveTransportSummary">
                         {transportSummaries.map(({ truckName, status, count }) => (
@@ -1296,18 +1309,7 @@ export default function Page() {
                       <textarea readOnly value={sent.body} />
                     )}
                   </div>
-                  {sent.id && (
-                    <OrderConfirmationPanel
-                      sentOrderId={sent.id}
-                      storeId={storeId}
-                      year={sent.year}
-                      week={sent.week}
-                      lagerOrderNumber={sent.lagerOrderNumber}
-                      uploadedBy={userName}
-                      originalLines={sent.originalLines}
-                      onStatusChange={updateConfirmationStatus}
-                    />
-                  )}
+                  </details>
                   <div className="archiveActions">
                     <button className="primary" onClick={() => createOrderPdf(sent)}>
                       {sent.id && confirmationStatuses[sent.id]?.count > 0 ? "Generer bekreftet PDF" : "Generer PDF"}
