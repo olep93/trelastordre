@@ -234,6 +234,14 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .sectionTitleRow h3, .confirmationSection h3, .confirmationSection h4 { margin: 0; color: var(--blue-900); font-size: 13px; }
 .sectionTitleRow p, .confirmationHeader p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
 .sectionTitleRow > span { padding: 4px 6px; color: var(--blue-900); border-radius: 3px; background: #e6edf4; font-size: 9px; font-weight: 800; }
+.archiveTransportSummary { margin-bottom: 7px; display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 5px; }
+.archiveTruckStatus { padding: 7px 8px; border: 1px solid; border-radius: 4px; }
+.archiveTruckStatus strong, .archiveTruckStatus span, .archiveTruckStatus b { display: block; }
+.archiveTruckStatus strong { font-size: 10px; }
+.archiveTruckStatus span, .archiveTruckStatus b { margin-top: 2px; font-size: 8px; }
+.archiveTruckStatus.module { color: #176735; border-color: #9cd2ae; background: #eff9f2; }
+.archiveTruckStatus.route { color: #74470b; border-color: #e5bc82; background: #fff8ed; }
+.archiveTruckStatus b { color: #9d2017; }
 .confirmationTableWrap { width: 100%; overflow-x: auto; border: 1px solid #d9e1e9; border-radius: 3px; background: #fff; }
 .confirmationTable { width: 100%; min-width: 620px; border-collapse: collapse; font-size: 11px; }
 .confirmationTable th, .confirmationTable td { padding: 5px 7px; text-align: left; vertical-align: middle; border-bottom: 1px solid #e5eaf0; }
@@ -243,6 +251,9 @@ textarea { width: 100%; min-height: 240px; padding: 12px; resize: vertical; colo
 .originalOrderTable th:last-child { width: 80px; text-align: center; }
 .archiveProductCell strong, .confirmationProductCell strong { display: block; color: var(--blue-900); font-size: 11px; }
 .archiveProductCell span, .confirmationProductMeta, .combinedProductMeta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; color: var(--muted); font-size: 8px; }
+.archiveProductCell em.archiveTransportTag { width: fit-content; margin-top: 4px; padding: 2px 5px; display: block; border-radius: 3px; font-size: 7px; font-style: normal; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
+.archiveTransportTag.module { color: #176735; background: #e8f6ed; }
+.archiveTransportTag.route { color: #83500b; background: #fff0d9; }
 .archivePackagesCell, .numericCell { text-align: center !important; }
 .archivePackagesCell span, .numericCell span { margin-left: 3px; color: var(--muted); font-size: 8px; }
 .confirmationHeader { padding-bottom: 7px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); }

@@ -14,6 +14,7 @@ export type ArchivedOrderLine = {
   packages: number;
   material: "gran" | "impregnert";
   truckName: string;
+  moduleEligible?: boolean;
 };
 
 type ConfirmationRecord = {

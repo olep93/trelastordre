@@ -359,8 +359,28 @@ function structuredOrderLines(order: WeeklyOrder): ArchivedOrderLine[] {
       packages: line.qty,
       material: line.material,
       truckName: truck.name,
+      moduleEligible: line.moduleEligible,
     })),
   );
+}
+
+function archivedLineContributes(line: ArchivedOrderLine) {
+  return line.moduleEligible ?? contributesToModule(line.category, line.dimension);
+}
+
+function archivedTruckSummaries(lines: ArchivedOrderLine[]) {
+  const groups = new Map<string, ArchivedOrderLine[]>();
+  lines.forEach((line) => groups.set(line.truckName, [...(groups.get(line.truckName) || []), line]));
+
+  return Array.from(groups.entries()).map(([truckName, truckLines]) => {
+    const items: Record<string, number> = {};
+    truckLines.forEach((line) => {
+      const key = lineKey(line.category, line.dimension, line.length);
+      items[key] = (items[key] || 0) + line.packages;
+    });
+    const truck: Truck = { id: truckName, name: truckName, items };
+    return { truckName, status: moduleStatus(truck), count: countForTruck(truck) };
+  });
 }
 
 function orderText(order: WeeklyOrder) {
@@ -1217,7 +1237,9 @@ export default function Page() {
               )}
               {sentOrders.length === 0 && <div className="emptyArchive">Arkiver en bestilling for å få den opp her.</div>}
               {!!sentOrders.length && visibleSentOrders.length === 0 && <div className="emptyArchive">Ingen lagerordrer matcher søket.</div>}
-              {visibleSentOrders.map((sent) => (
+              {visibleSentOrders.map((sent) => {
+                const transportSummaries = archivedTruckSummaries(sent.originalLines || []);
+                return (
                 <details className="archiveItem" key={sent.id}>
                   <summary>
                     <div className="archiveOrderIdentity">
@@ -1239,6 +1261,17 @@ export default function Page() {
                       <div><h3>Opprinnelig bestilling</h3><p>Denne bestillingen endres aldri av opplastede PDF-er.</p></div>
                       <span>{sent.totalPackages} pakker</span>
                     </div>
+                    {!!transportSummaries.length && (
+                      <div className="archiveTransportSummary">
+                        {transportSummaries.map(({ truckName, status, count }) => (
+                          <div className={`archiveTruckStatus ${status.ok ? "module" : "route"}`} key={truckName}>
+                            <strong>{truckName}: {status.ok ? `Modulvogn · ${status.target.label}` : "Ikke full modulvogn"}</strong>
+                            <span>{count.gran} gran + {count.imp} imp teller mot modul{status.ok ? ` · ${status.discount} % rabatt` : ` · ${status.text}`}</span>
+                            {!!count.route && <b>{count.route} pk på rutebil / utenfor modulvogn</b>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {sent.originalLines?.length ? (
                       <div className="confirmationTableWrap">
                         <table className="confirmationTable originalOrderTable">
@@ -1249,6 +1282,9 @@ export default function Page() {
                                 <td className="archiveProductCell">
                                   <strong>{line.dimension} · {line.length === "Fallende" ? line.length : `${line.length} m`}</strong>
                                   <span>{line.category} · {line.truckName}</span>
+                                  <em className={`archiveTransportTag ${archivedLineContributes(line) ? "module" : "route"}`}>
+                                    {archivedLineContributes(line) ? "Bidro mot modulvogn" : "På rutebil · bidro ikke mot modulvogn"}
+                                  </em>
                                 </td>
                                 <td className="archivePackagesCell"><strong>{line.packages}</strong><span>pk</span></td>
                               </tr>
@@ -1279,7 +1315,8 @@ export default function Page() {
                     <button className="secondary" onClick={() => exportSentOrderCsv(sent)}>Eksporter til Excel/CSV</button>
                   </div>
                 </details>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
