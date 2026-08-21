@@ -13,7 +13,7 @@ export const STANDARD_LENGTHS = ["3,6", "3,9", "4,2", "4,8", "5,1", "5,4"];
 
 export const MODULE_TARGETS = [
   { id: "A", label: "15 imp + 10 gran", gran: 10, imp: 15 },
-  { id: "B", label: "20 imp + 10 gran", gran: 10, imp: 20 },
+  { id: "B", label: "10 imp + 20 gran", gran: 20, imp: 10 },
 ];
 
 export const categories: Category[] = [

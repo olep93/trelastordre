@@ -242,7 +242,7 @@ function halfPalletStatus(truck: Truck) {
 }
 
 const BASE_TARGETS = [
-  { id: "G10I20", label: "10 gran + 20 imp", gran: 10, imp: 20 },
+  { id: "G20I10", label: "20 gran + 10 imp", gran: 20, imp: 10 },
   { id: "G10I15", label: "10 gran + 15 imp", gran: 10, imp: 15 },
   { id: "I16", label: "16 imp + 0 gran", gran: 0, imp: 16 },
   { id: "I22T", label: "22 imp + 0 gran kun 28x120 terrassebord", gran: 0, imp: 22 },
