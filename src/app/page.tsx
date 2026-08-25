@@ -1122,7 +1122,7 @@ export default function Page() {
                       <button key={`${category.name}-${product}`} className={`productRow ${qty ? "hasQty" : ""} ${moduleEligible ? "moduleProduct" : "routeProduct"} ${halfInvalid && halfProduct ? "halfInvalid" : ""}`} onClick={() => setSelected({ category, product })}>
                         <div className="productRowMain">
                           <strong>{product}</strong>
-                          <span className={`transportTag ${moduleEligible ? "module" : "route"}`}>{moduleEligible ? "Teller mot modulvogn" : "På rutebil · kan ikke bidra mot modulvogn"}</span>
+                          <span className={`transportTag ${moduleEligible ? "module" : "route"}`}>{moduleEligible ? "● Rasjonalitetsrabatt · teller mot modulvogn" : "På rutebil · kan ikke bidra mot modulvogn"}</span>
                         </div>
                         <div className="productRowSide">
                           <b>{qty}</b>

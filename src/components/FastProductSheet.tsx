@@ -123,8 +123,8 @@ function FastProductSheetComponent({
         </div>
 
         <div className={`sheetTransportNotice ${moduleEligible ? "module" : "route"}`}>
-          <strong>{moduleEligible ? "Teller mot modulvogn" : "PÅ RUTEBIL / KAN IKKE BIDRA MOT MODULVOGN"}</strong>
-          <span>{moduleEligible ? "Pakkene inngår i beregningen av modulvognen." : "Pakkene påvirker ikke modulmengde eller rabatt."}</span>
+          <strong>{moduleEligible ? "● RASJONALITETSRABATT · TELLER MOT MODULVOGN" : "PÅ RUTEBIL / KAN IKKE BIDRA MOT MODULVOGN"}</strong>
+          <span>{moduleEligible ? "Pakkene inngår i modulberegningen og kan utløse 6 % eller 8 % rabatt." : "Pakkene påvirker ikke modulmengde eller rabatt."}</span>
         </div>
 
         <div className="sheetLengthList">

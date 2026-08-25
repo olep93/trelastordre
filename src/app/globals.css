@@ -180,6 +180,9 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .productRowMain span.transportTag { width: fit-content; margin-top: 5px; padding: 3px 5px; display: block; border-radius: 3px; font-size: 8px; font-style: normal; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
 .transportTag.module { color: #176735; background: #e8f6ed; }
 .transportTag.route { color: #83500b; background: #fff0d9; }
+.productRow.moduleProduct { border-color: #a9d8b8; background: #f5fbf7; box-shadow: inset 3px 0 0 #2d8a4e; }
+.productRow.moduleProduct:hover { background: #edf8f1; }
+.productRow.moduleProduct.hasQty { border-color: #2d8a4e; background: #eff9f2; box-shadow: inset 4px 0 0 #2d8a4e; }
 .productRow.routeProduct { border-style: dashed; background: #fffdf8; }
 .productRow.routeProduct.hasQty { border-color: #c88324; background: #fff8ed; box-shadow: inset 3px 0 0 #c88324; }
 .productRowSide { width: 40px; height: 38px; display: grid; place-content: center; flex: 0 0 auto; text-align: center; color: var(--blue-900); border-radius: 4px; background: #eaf1f7; }
