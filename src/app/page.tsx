@@ -720,6 +720,53 @@ export default function Page() {
     setActiveTruckIndex(0);
   }
 
+  async function restoreArchivedOrder(sent: SentOrder) {
+    if (!sent.originalLines?.length) {
+      return showToast("Denne eldre ordren mangler strukturerte varelinjer");
+    }
+
+    const currentPackages = countAll(order).overall;
+    const warning = currentPackages
+      ? `Dette erstatter den aktive ordren som nå har ${currentPackages} pakker. Arkivkopien beholdes. Fortsette?`
+      : "Gjenopprette denne lagerordren som aktiv ordre? Arkivkopien beholdes.";
+    if (!confirm(warning)) return;
+
+    const grouped = new Map<string, Record<string, number>>();
+    sent.originalLines.forEach((line) => {
+      const items = grouped.get(line.truckName) || {};
+      const key = lineKey(line.category, line.dimension, line.length);
+      items[key] = (items[key] || 0) + line.packages;
+      grouped.set(line.truckName, items);
+    });
+
+    const now = Date.now();
+    const trucks = Array.from(grouped.entries()).map(([name, items]) => ({ id: randomId(), name, items }));
+    const restored: WeeklyOrder = {
+      id: orderIdForCurrentWeek(),
+      year: sent.year,
+      week: sent.week,
+      storeName,
+      recipient: RECIPIENT,
+      trucks: trucks.length ? trucks : [{ id: randomId(), name: "Bil 1", items: {} }],
+      createdAt: now,
+      updatedAt: now,
+      lastEditedBy: userName,
+      lastEditedAt: now,
+    };
+
+    setSaving(true);
+    try {
+      await setDoc(orderRef(storeId), restored);
+      setOrder(restored);
+      setActiveTruckIndex(0);
+      setView("order");
+      showToast(`Lagerordre ${sent.lagerOrderNumber || ""} er gjenopprettet`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function commitProductDeltas(category: string, product: string, deltas: Record<string, number>) {
     const index = Math.min(activeTruckIndex, Math.max(0, order.trucks.length - 1));
 
@@ -1290,6 +1337,7 @@ export default function Page() {
                   </div>
                   </details>
                   <div className="archiveActions">
+                    <button className="secondary restoreOrderButton" onClick={() => restoreArchivedOrder(sent)}>Gjenopprett som aktiv ordre</button>
                     <button className="primary" onClick={() => createOrderPdf(sent)}>
                       {sent.id && confirmationStatuses[sent.id]?.count > 0 ? "Generer bekreftet PDF" : "Generer PDF"}
                     </button>
